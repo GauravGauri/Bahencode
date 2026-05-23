@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>behencode – where she is free to be all of her</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&family=Dancing+Script:wght@500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --blush: #f2d5d0;
+    --rose: #d4856a;
+    --dusty: #c4a49a;
+    --cream: #faf6f2;
+    --warm-white: #fff9f6;
+    --dark: #2a1f1a;
+    --mid: #6b4f43;
+    --light-brown: #a07868;
+    --soft-pink: #f7e8e4;
+    --border: #e8d5cf;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--warm-white);
+    color: var(--dark);
+    overflow-x: hidden;
+  }
+
+  /* ── ANNOUNCEMENT BAR ── */
+  .announcement {
+    background: var(--blush);
+    text-align: center;
+    padding: 10px 20px;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    color: var(--mid);
+    font-weight: 500;
+  }
+  .announcement span { margin: 0 6px; }
+
+  /* ── NAV ── */
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 48px;
+    background: var(--warm-white);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .nav-left { display: flex; gap: 32px; align-items: center; }
+  .nav-left a {
+    text-decoration: none;
+    color: var(--dark);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+  .nav-left a:hover { color: var(--rose); }
+  .nav-left a.has-arrow::after { content: ' ↓'; font-size: 10px; }
+
+  .logo {
+    text-align: center;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .logo h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 32px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    color: var(--dark);
+    line-height: 1;
+  }
+  .logo h1 span { color: var(--rose); }
+  .logo p {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--light-brown);
+    margin-top: 2px;
+  }
+
+  .nav-right { display: flex; gap: 20px; align-items: center; }
+  .nav-right button {
+    background: none; border: none; cursor: pointer;
+    color: var(--dark); font-size: 18px; transition: color 0.2s;
+    position: relative;
+  }
+  .nav-right button:hover { color: var(--rose); }
+  .cart-count {
+    position: absolute; top: -6px; right: -6px;
+    background: var(--rose); color: white;
+    border-radius: 50%; width: 16px; height: 16px;
+    font-size: 9px; display: flex; align-items: center; justify-content: center;
+    font-weight: 600;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative;
+    min-height: 90vh;
+    background: linear-gradient(135deg, #f5e8e3 0%, #ead5cd 40%, #dfc5bb 100%);
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  .hero-bg-pattern {
+    position: absolute; inset: 0;
+    background-image: radial-gradient(circle at 80% 20%, rgba(212,133,106,0.12) 0%, transparent 50%),
+                      radial-gradient(circle at 10% 80%, rgba(196,164,154,0.15) 0%, transparent 40%);
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    padding: 80px 80px;
+    max-width: 520px;
+    animation: fadeInLeft 0.9s ease both;
+  }
+
+  @keyframes fadeInLeft {
+    from { opacity: 0; transform: translateX(-30px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .hero-tagline {
+    font-family: 'Dancing Script', cursive;
+    font-size: 22px;
+    color: var(--rose);
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .hero-tagline::after { content: '♡'; }
+
+  .hero h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(42px, 6vw, 68px);
+    font-weight: 600;
+    line-height: 1.08;
+    color: var(--dark);
+    margin-bottom: 20px;
+  }
+
+  .hero p {
+    font-size: 14px;
+    line-height: 1.8;
+    color: var(--mid);
+    margin-bottom: 36px;
+    max-width: 340px;
+  }
+
+  .btn-primary {
+    display: inline-block;
+    background: var(--rose);
+    color: white;
+    padding: 14px 36px;
+    border-radius: 40px;
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background 0.25s, transform 0.2s;
+    border: none; cursor: pointer;
+  }
+  .btn-primary:hover {
+    background: var(--mid);
+    transform: translateY(-2px);
+  }
+
+  .hero-image-collage {
+    position: absolute;
+    right: 0; top: 0; bottom: 0;
+    width: 55%;
+    overflow: hidden;
+  }
+
+  .hero-img-placeholder {
+    width: 100%; height: 100%;
+    background: linear-gradient(160deg, #e8c4bb 0%, #d4a89a 50%, #c09080 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px; color: rgba(255,255,255,0.6);
+    font-style: italic;
+  }
+
+  /* decorative floating elements */
+  .hero-deco {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.3;
+    animation: float 6s ease-in-out infinite;
+  }
+  .hero-deco-1 { width: 80px; height: 80px; background: var(--rose); top: 15%; left: 45%; animation-delay: 0s; }
+  .hero-deco-2 { width: 40px; height: 40px; background: var(--blush); bottom: 25%; left: 38%; animation-delay: 2s; }
+  .hero-deco-3 { width: 120px; height: 120px; background: var(--dusty); top: 60%; right: 5%; animation-delay: 4s; }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-18px); }
+  }
+
+  /* ── CATEGORIES ── */
+  .section-title {
+    text-align: center;
+    padding: 60px 0 40px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 13px;
+    letter-spacing: 0.3em;
+    color: var(--dark);
+    text-transform: uppercase;
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+  }
+  .section-title::after { content: '♡'; color: var(--rose); font-size: 16px; }
+
+  .categories {
+    padding: 0 48px 80px;
+  }
+
+  .cat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+
+  .cat-card {
+    position: relative;
+    border-radius: 16px;
+    overflow: hidden;
+    aspect-ratio: 3/4;
+    cursor: pointer;
+    transition: transform 0.3s;
+  }
+  .cat-card:hover { transform: translateY(-6px); }
+  .cat-card:hover .cat-img { transform: scale(1.05); }
+
+  .cat-img {
+    width: 100%; height: 100%;
+    transition: transform 0.5s ease;
+  }
+
+  /* Placeholder images with distinct tones */
+  .cat-tops    { background: linear-gradient(160deg, #e8c4b8, #c49080); }
+  .cat-bottoms { background: linear-gradient(160deg, #d8cfc0, #b8a890); }
+  .cat-dresses { background: linear-gradient(160deg, #f0d8d0, #d4a098); }
+  .cat-coords  { background: linear-gradient(160deg, #e0c8c4, #c0a0a0); }
+
+  .cat-label {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 28px 20px 20px;
+    background: linear-gradient(to top, rgba(30,15,10,0.55), transparent);
+    color: white;
+  }
+  .cat-label h3 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    letter-spacing: 0.2em;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  .cat-label a {
+    font-size: 11px;
+    color: rgba(255,255,255,0.8);
+    text-decoration: none;
+    display: flex; align-items: center; gap: 6px;
+    letter-spacing: 0.08em;
+    transition: gap 0.2s;
+  }
+  .cat-card:hover .cat-label a { gap: 10px; }
+
+  /* ── STORY SECTION ── */
+  .story {
+    background: var(--soft-pink);
+    padding: 80px 80px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: center;
+  }
+
+  .story-text .story-pre {
+    font-family: 'Dancing Script', cursive;
+    font-size: 20px;
+    color: var(--rose);
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .story-text .story-pre::after { content: '♡'; }
+
+  .story-text h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(32px, 4vw, 50px);
+    font-weight: 600;
+    line-height: 1.15;
+    margin-bottom: 24px;
+    color: var(--dark);
+  }
+
+  .story-text p {
+    font-size: 14px;
+    line-height: 1.9;
+    color: var(--mid);
+    margin-bottom: 32px;
+    max-width: 440px;
+  }
+
+  .btn-outline {
+    display: inline-block;
+    border: 1.5px solid var(--rose);
+    color: var(--rose);
+    padding: 13px 32px;
+    border-radius: 40px;
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.25s;
+    cursor: pointer; background: none;
+  }
+  .btn-outline:hover {
+    background: var(--rose);
+    color: white;
+  }
+
+  .story-collage {
+    position: relative;
+    height: 420px;
+  }
+
+  .polaroid {
+    position: absolute;
+    background: white;
+    padding: 10px 10px 36px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    border-radius: 4px;
+  }
+
+  .polaroid-inner {
+    width: 100%; height: 85%;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .pol-1 { width: 200px; height: 240px; top: 10px; left: 0; transform: rotate(-5deg); }
+  .pol-2 { width: 190px; height: 220px; top: 40px; right: 0; transform: rotate(4deg); }
+  .pol-3 { width: 210px; height: 250px; bottom: 0; left: 60px; transform: rotate(2deg); }
+
+  .pol-img-1 { background: linear-gradient(135deg, #d4b0a8, #a87060); }
+  .pol-img-2 { background: linear-gradient(135deg, #c8b898, #a09070); }
+  .pol-img-3 { background: linear-gradient(135deg, #e0c0b8, #c09080); }
+
+  .pol-caption {
+    position: absolute;
+    bottom: 8px; left: 0; right: 0;
+    text-align: center;
+    font-family: 'Dancing Script', cursive;
+    font-size: 12px;
+    color: var(--mid);
+  }
+
+  .story-note {
+    position: absolute;
+    bottom: 20px; right: -10px;
+    background: white;
+    padding: 16px 20px;
+    border-radius: 4px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    transform: rotate(3deg);
+    font-family: 'Dancing Script', cursive;
+    font-size: 15px;
+    color: var(--mid);
+    line-height: 1.5;
+    max-width: 160px;
+    z-index: 2;
+  }
+  .story-note::after { content: ' ♡'; color: var(--rose); }
+
+  /* ── TRUST BAR ── */
+  .trust-bar {
+    background: var(--cream);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    padding: 40px 80px;
+  }
+
+  .trust-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 0 20px;
+    border-right: 1px solid var(--border);
+  }
+  .trust-item:last-child { border-right: none; }
+
+  .trust-icon {
+    font-size: 22px;
+    color: var(--rose);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .trust-item h4 {
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+    color: var(--dark);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+  }
+
+  .trust-item p {
+    font-size: 12px;
+    color: var(--light-brown);
+    line-height: 1.5;
+  }
+
+  /* ── INSTAGRAM ── */
+  .instagram {
+    padding: 60px 0;
+    text-align: center;
+    background: var(--warm-white);
+  }
+
+  .instagram h3 {
+    font-family: 'Dancing Script', cursive;
+    font-size: 28px;
+    color: var(--dark);
+    margin-bottom: 6px;
+  }
+
+  .instagram p {
+    font-size: 13px;
+    color: var(--light-brown);
+    margin-bottom: 8px;
+    letter-spacing: 0.08em;
+  }
+
+  .ig-handle {
+    font-size: 13px; color: var(--rose); font-weight: 500;
+    letter-spacing: 0.06em; margin-bottom: 32px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+
+  .ig-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0;
+  }
+
+  .ig-thumb {
+    aspect-ratio: 1;
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+  }
+  .ig-thumb::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: rgba(212,133,106,0);
+    transition: background 0.3s;
+  }
+  .ig-thumb:hover::after {
+    background: rgba(212,133,106,0.35);
+  }
+
+  .ig-colors {
+    background-size: cover;
+  }
+  .ig-1 { background: linear-gradient(135deg, #e8c0b0, #c89080); }
+  .ig-2 { background: linear-gradient(135deg, #d8b8a0, #b89070); }
+  .ig-3 { background: linear-gradient(135deg, #f0d0c0, #d4a898); }
+  .ig-4 { background: linear-gradient(135deg, #e0c8b8, #c0a890); }
+  .ig-5 { background: linear-gradient(135deg, #d8c0c0, #b8a0a0); }
+  .ig-6 { background: linear-gradient(135deg, #e8d0c0, #c8b090); }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--dark);
+    color: rgba(255,255,255,0.5);
+    padding: 28px 80px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  footer p { font-size: 11px; letter-spacing: 0.06em; }
+
+  .footer-links {
+    display: flex;
+    gap: 28px;
+  }
+
+  .footer-links a {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: rgba(255,255,255,0.5);
+    text-decoration: none;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+  .footer-links a:hover { color: var(--blush); }
+
+  .footer-heart {
+    color: var(--rose);
+    font-size: 16px;
+  }
+
+  /* ── FIGURE PLACEHOLDERS ── */
+  .img-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,0.4);
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 13px;
+  }
+
+  /* ── SCROLL REVEAL ── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    nav { padding: 16px 24px; }
+    .hero-content { padding: 60px 40px; max-width: 100%; }
+    .hero-image-collage { display: none; }
+    .cat-grid { grid-template-columns: repeat(2, 1fr); }
+    .story { grid-template-columns: 1fr; padding: 60px 40px; }
+    .story-collage { height: 320px; }
+    .trust-bar { grid-template-columns: repeat(2, 1fr); padding: 40px; gap: 20px; }
+    .trust-item { border-right: none; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
+    .ig-grid { grid-template-columns: repeat(3, 1fr); }
+    .ig-thumb:nth-child(n+4) { display: none; }
+    footer { flex-direction: column; gap: 16px; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ANNOUNCEMENT -->
+<div class="announcement">
+  FREE SHIPPING ON ORDERS ABOVE ₹199 <span>✦</span> USE CODE BEHEN10 FOR 10% OFF
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-left">
+    <a href="#" class="has-arrow">SHOP</a>
+    <a href="#">NEW IN</a>
+    <a href="#">BESTSELLERS</a>
+    <a href="#">ABOUT US</a>
+  </div>
+
+  <div class="logo">
+    <h1>behencode<span>♡</span></h1>
+    <p>where she is free to be all of her</p>
+  </div>
+
+  <div class="nav-right">
+    <button title="Search">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    </button>
+    <button title="Account">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </button>
+    <button title="Cart" style="position:relative">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      <span class="cart-count">0</span>
+    </button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg-pattern"></div>
+
+  <div class="hero-deco hero-deco-1"></div>
+  <div class="hero-deco hero-deco-2"></div>
+  <div class="hero-deco hero-deco-3"></div>
+
+  <div class="hero-content">
+    <div class="hero-tagline">for her, with her, because of her.</div>
+    <h2>made for every version of you.</h2>
+    <p>Effortless pieces that move with you, through every mood, every moment, every chapter.</p>
+    <a href="#" class="btn-primary">SHOP NEW IN</a>
+  </div>
+
+  <div class="hero-image-collage">
+    <div class="hero-img-placeholder">
+      <div style="text-align:center;">
+        <div style="font-size:48px;margin-bottom:8px;">🌸</div>
+        <div>your hero image here</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CATEGORIES -->
+<section class="categories">
+  <div class="section-title">SHOP BY CATEGORY</div>
+
+  <div class="cat-grid reveal">
+    <div class="cat-card">
+      <div class="cat-img cat-tops">
+        <div class="img-placeholder">Tops</div>
+      </div>
+      <div class="cat-label">
+        <h3>TOPS</h3>
+        <a href="#">shop now →</a>
+      </div>
+    </div>
+
+    <div class="cat-card">
+      <div class="cat-img cat-bottoms">
+        <div class="img-placeholder">Bottoms</div>
+      </div>
+      <div class="cat-label">
+        <h3>BOTTOMS</h3>
+        <a href="#">shop now →</a>
+      </div>
+    </div>
+
+    <div class="cat-card">
+      <div class="cat-img cat-dresses">
+        <div class="img-placeholder">Dresses</div>
+      </div>
+      <div class="cat-label">
+        <h3>DRESSES</h3>
+        <a href="#">shop now →</a>
+      </div>
+    </div>
+
+    <div class="cat-card">
+      <div class="cat-img cat-coords">
+        <div class="img-placeholder">Coord Sets</div>
+      </div>
+      <div class="cat-label">
+        <h3>COORD SETS</h3>
+        <a href="#">shop now →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STORY -->
+<section class="story">
+  <div class="story-text reveal">
+    <div class="story-pre">our story</div>
+    <h2>built on friendship, designed for freedom.</h2>
+    <p>behencode is more than a brand, it's a feeling. It's the inside jokes, the long talks, the comfort of being your truest self with your people. We create pieces for every version of you — bold, soft, messy, happy, all of it.</p>
+    <a href="#" class="btn-outline">KNOW MORE ABOUT US</a>
+  </div>
+
+  <div class="story-collage reveal">
+    <div class="polaroid pol-1">
+      <div class="polaroid-inner pol-img-1">
+        <div class="img-placeholder" style="color:rgba(255,255,255,0.5);font-size:11px;">real friends</div>
+      </div>
+      <div class="pol-caption">real friends</div>
+    </div>
+    <div class="polaroid pol-2">
+      <div class="polaroid-inner pol-img-2">
+        <div class="img-placeholder" style="color:rgba(255,255,255,0.5);font-size:11px;"></div>
+      </div>
+    </div>
+    <div class="polaroid pol-3">
+      <div class="polaroid-inner pol-img-3">
+        <div class="img-placeholder" style="color:rgba(255,255,255,0.5);font-size:11px;">real moments</div>
+      </div>
+      <div class="pol-caption">real moments</div>
+    </div>
+    <div class="story-note">here's to girls who build each other up.</div>
+  </div>
+</section>
+
+<!-- TRUST BAR -->
+<div class="trust-bar reveal">
+  <div class="trust-item">
+    <div class="trust-icon">♡</div>
+    <div>
+      <h4>Designed in India</h4>
+      <p>Thoughtfully designed for every Indian girl</p>
+    </div>
+  </div>
+  <div class="trust-item">
+    <div class="trust-icon">✿</div>
+    <div>
+      <h4>Quality You Love</h4>
+      <p>Premium fabrics for everyday comfort</p>
+    </div>
+  </div>
+  <div class="trust-item">
+    <div class="trust-icon">◻</div>
+    <div>
+      <h4>Easy Returns</h4>
+      <p>Hassle-free returns and exchanges</p>
+    </div>
+  </div>
+  <div class="trust-item">
+    <div class="trust-icon">✦</div>
+    <div>
+      <h4>Made for You</h4>
+      <p>Styles that move with your every mood</p>
+    </div>
+  </div>
+</div>
+
+<!-- INSTAGRAM -->
+<section class="instagram">
+  <h3>be you, be all of you.</h3>
+  <p>Tag us to be featured</p>
+  <div class="ig-handle">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+    @behencode.in
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+  </div>
+
+  <div class="ig-grid">
+    <div class="ig-thumb ig-1 ig-colors"></div>
+    <div class="ig-thumb ig-2 ig-colors"></div>
+    <div class="ig-thumb ig-3 ig-colors"></div>
+    <div class="ig-thumb ig-4 ig-colors"></div>
+    <div class="ig-thumb ig-5 ig-colors"></div>
+    <div class="ig-thumb ig-6 ig-colors"></div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>© 2024 behencode. All rights reserved.</p>
+  <div class="footer-links">
+    <a href="#">Size Guide</a>
+    <a href="#">Shipping</a>
+    <a href="#">Returns</a>
+    <a href="#">FAQs</a>
+    <a href="#">Contact Us</a>
+  </div>
+  <div class="footer-heart">♡</div>
+</footer>
+
+<script>
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('visible'), i * 80);
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  reveals.forEach(el => io.observe(el));
+</script>
+</body>
+</html>
