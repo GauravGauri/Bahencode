@@ -140,8 +140,8 @@ function ShopContent() {
       try {
         setLoading(true);
         const res = await API.get('/products');
-        if (res.data && res.data.length > 0) {
-          setProducts(res.data);
+        if (res.data && res.data.products && res.data.products.length > 0) {
+          setProducts(res.data.products);
         }
       } catch (err) {
         console.warn('API error fetching products. Using fallback mock catalog.');

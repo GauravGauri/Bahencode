@@ -109,8 +109,8 @@ export default function HomePage() {
     const fetchProducts = async () => {
       try {
         const response = await API.get('/products');
-        if (response.data && response.data.length > 0) {
-          setProducts(response.data);
+        if (response.data && response.data.products && response.data.products.length > 0) {
+          setProducts(response.data.products);
         }
       } catch (err) {
         console.warn('Backend server not responding. Falling back to high-fidelity mock data.');

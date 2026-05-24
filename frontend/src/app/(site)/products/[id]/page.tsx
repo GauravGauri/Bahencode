@@ -122,8 +122,8 @@ export default function ProductDetailsPage({ params }: PageProps) {
         let targetProduct = null;
         try {
           const res = await API.get(`/products/${productId}`);
-          if (res.data) {
-            targetProduct = res.data;
+          if (res.data && res.data.product) {
+            targetProduct = res.data.product;
           }
         } catch (err) {
           console.warn('API error fetching product. Using mock catalog fallback.');
@@ -142,8 +142,8 @@ export default function ProductDetailsPage({ params }: PageProps) {
           let catalog = [...MOCK_CATALOG];
           try {
             const resAll = await API.get('/products');
-            if (resAll.data && resAll.data.length > 0) {
-              catalog = resAll.data;
+            if (resAll.data && resAll.data.products && resAll.data.products.length > 0) {
+              catalog = resAll.data.products;
             }
           } catch (e) {}
 

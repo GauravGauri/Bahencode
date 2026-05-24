@@ -173,8 +173,8 @@ export default function AdminDashboard() {
       // Products fetch
       try {
         const prodRes = await API.get('/products');
-        if (prodRes.data && prodRes.data.length > 0) {
-          setProducts(prodRes.data);
+        if (prodRes.data && prodRes.data.products && prodRes.data.products.length > 0) {
+          setProducts(prodRes.data.products);
         }
       } catch (err) {
         console.warn('API connection issue loading products. Using mock fallback list.');
@@ -183,8 +183,8 @@ export default function AdminDashboard() {
       // Messages fetch
       try {
         const msgRes = await API.get('/contact');
-        if (msgRes.data && msgRes.data.length > 0) {
-          setMessages(msgRes.data);
+        if (msgRes.data && msgRes.data.messages && msgRes.data.messages.length > 0) {
+          setMessages(msgRes.data.messages);
         }
       } catch (err) {
         console.warn('API connection issue loading contact messages. Using mock fallback inbox.');
