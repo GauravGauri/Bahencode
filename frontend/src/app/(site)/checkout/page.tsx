@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form';
 import { ShoppingBag, ArrowLeft, CheckCircle2, Ticket, CreditCard, ShieldCheck } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
+import { getImageUrl } from '@/lib/utils';
 
 interface CheckoutFormData {
   fullName: string;
