@@ -1,0 +1,123 @@
+@import "tailwindcss";
+
+:root {
+  --background: #fff9f6; /* warm-white */
+  --foreground: #2a1f1a; /* dark */
+
+  --blush: #f2d5d0;
+  --rose: #d4856a;
+  --dusty: #c4a49a;
+  --cream: #faf6f2;
+  --dark: #2a1f1a;
+  --mid: #6b4f43;
+  --light-brown: #a07868;
+  --soft-pink: #f7e8e4;
+  --border-custom: #e8d5cf;
+}
+
+[data-theme="dark"] {
+  --background: #1e1512;
+  --foreground: #faf6f2;
+  
+  --blush: #563b36;
+  --rose: #d4856a;
+  --dusty: #543f38;
+  --cream: #2a1f1a;
+  --dark: #faf6f2;
+  --mid: #d4a796;
+  --light-brown: #c4a49a;
+  --soft-pink: #2e1d18;
+  --border-custom: #423029;
+}
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  
+  --color-blush: var(--blush);
+  --color-rose: var(--rose);
+  --color-dusty: var(--dusty);
+  --color-cream: var(--cream);
+  --color-dark: var(--dark);
+  --color-mid: var(--mid);
+  --color-light-brown: var(--light-brown);
+  --color-soft-pink: var(--soft-pink);
+  --color-border-custom: var(--border-custom);
+
+  --font-playfair: var(--font-playfair-display);
+  --font-caveat: var(--font-caveat);
+  --font-dm-sans: var(--font-dm-sans);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--cream);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--dusty);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--rose);
+}
+
+/* Lenis Smooth Scroll Configuration */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
+}
+
+/* Custom Polaroid Effect */
+.polaroid-card {
+  background: white;
+  padding: 12px 12px 36px 12px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.polaroid-card:hover {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+}
+
+/* Base Styles */
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-dm-sans), sans-serif;
+  overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* GSAP/Reveal Reveal effects */
+.reveal-text {
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+/* Swiper custom styles */
+.swiper-button-next,
+.swiper-button-prev {
+  color: var(--rose) !important;
+}
+.swiper-pagination-bullet-active {
+  background: var(--rose) !important;
+}
