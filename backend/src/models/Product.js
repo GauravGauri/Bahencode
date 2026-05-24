@@ -19,7 +19,8 @@ const ProductSchema = new mongoose.Schema({
     type: Number,
   },
   category: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Category',
     required: [true, 'Please select a category'],
   },
   sizes: {
@@ -48,6 +49,14 @@ const ProductSchema = new mongoose.Schema({
   isNewIn: {
     type: Boolean,
     default: false,
+  },
+  rating: {
+    type: Number,
+    default: 0,
+  },
+  numReviews: {
+    type: Number,
+    default: 0,
   },
   createdAt: {
     type: Date,

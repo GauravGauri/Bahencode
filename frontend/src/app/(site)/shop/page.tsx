@@ -119,7 +119,7 @@ function ShopContent() {
 
   // State Management
   const [products, setProducts] = useState<any[]>(MOCK_CATALOG);
-  const [categories, setCategories] = useState<string[]>(['All', 'Tops', 'Bottoms', 'Dresses', 'Coord Sets', 'Winter Collection']);
+  const [dbCategories, setDbCategories] = useState<any[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<any[]>(MOCK_CATALOG);
   const [loading, setLoading] = useState(true);
 
@@ -158,11 +158,10 @@ function ShopContent() {
       try {
         const res = await API.get('/categories');
         if (res.data && res.data.categories) {
-          const names = res.data.categories.map((c: any) => c.name);
-          setCategories(['All', ...names]);
+          setDbCategories(res.data.categories);
         }
       } catch (err) {
-        console.warn('API error fetching categories. Using fallback.');
+        console.warn('API error fetching categories.');
       }
     };
     getCategories();
@@ -189,7 +188,20 @@ function ShopContent() {
 
     // Category Filter
     if (selectedCategory !== 'All') {
-      result = result.filter((p) => p.category === selectedCategory);
+      result = result.filter((p) => {
+        if (p.category && typeof p.category === 'object') {
+          const catId = p.category._id;
+          const parentId = p.category.parent?._id;
+          const grandParentId = p.category.parent?.parent?._id;
+          return (
+            catId === selectedCategory ||
+            parentId === selectedCategory ||
+            grandParentId === selectedCategory ||
+            p.category.name === selectedCategory
+          );
+        }
+        return p.category === selectedCategory;
+      });
     }
 
     // Search Query Filter
@@ -199,7 +211,9 @@ function ShopContent() {
         (p) =>
           p.name.toLowerCase().includes(query) ||
           p.description?.toLowerCase().includes(query) ||
-          p.category.toLowerCase().includes(query)
+          (p.category && typeof p.category === 'object' 
+            ? p.category.name.toLowerCase().includes(query) 
+            : p.category.toLowerCase().includes(query))
       );
     }
 
@@ -240,6 +254,28 @@ function ShopContent() {
     setSelectedSize('');
     setMaxPrice(5000);
     setSortBy('newest');
+  };
+
+  const buildSidebarCategories = () => {
+    const level1 = dbCategories.filter(c => !c.parent);
+    if (level1.length === 0) {
+      // Mock categories for shop catalog fallback
+      return [
+        { _id: 'Tops', name: 'Tops' },
+        { _id: 'Bottoms', name: 'Bottoms' },
+        { _id: 'Dresses', name: 'Dresses' },
+        { _id: 'Coord Sets', name: 'Coord Sets' },
+        { _id: 'Winter Collection', name: 'Winter Collection' }
+      ];
+    }
+    return level1.map(l1 => {
+      const level2 = dbCategories.filter(c => c.parent && c.parent._id === l1._id);
+      const subCategories = level2.map(l2 => {
+        const level3 = dbCategories.filter(c => c.parent && c.parent._id === l2._id);
+        return { ...l2, subSubCategories: level3 };
+      });
+      return { ...l1, subCategories };
+    });
   };
 
   return (
@@ -310,18 +346,58 @@ function ShopContent() {
           <div>
             <h3 className="text-xs tracking-wider font-bold text-foreground mb-3 uppercase">Category</h3>
             <div className="space-y-2">
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`block text-xs font-medium cursor-pointer transition-colors ${
-                    selectedCategory === cat
-                      ? 'text-rose font-bold'
-                      : 'text-mid hover:text-rose'
-                  }`}
-                >
-                  {cat}
-                </button>
+              <button
+                onClick={() => setSelectedCategory('All')}
+                className={`block text-xs font-medium cursor-pointer transition-colors text-left ${
+                  selectedCategory === 'All'
+                    ? 'text-rose font-bold'
+                    : 'text-mid hover:text-rose'
+                }`}
+              >
+                All Collection
+              </button>
+              {buildSidebarCategories().map((cat) => (
+                <div key={cat._id} className="space-y-1 pl-0.5">
+                  <button
+                    onClick={() => setSelectedCategory(cat._id)}
+                    className={`block text-xs font-bold cursor-pointer transition-colors text-left ${
+                      selectedCategory === cat._id ? 'text-rose' : 'text-foreground hover:text-rose'
+                    }`}
+                  >
+                    {cat.name}
+                  </button>
+                  {cat.subCategories && (
+                    <div className="pl-2.5 space-y-1 border-l border-border-custom/30 ml-1">
+                      {cat.subCategories.map((sub: any) => (
+                        <div key={sub._id}>
+                          <button
+                            onClick={() => setSelectedCategory(sub._id)}
+                            className={`block text-[11px] font-semibold cursor-pointer transition-colors text-left ${
+                              selectedCategory === sub._id ? 'text-rose' : 'text-mid hover:text-rose'
+                            }`}
+                          >
+                            {sub.name}
+                          </button>
+                          {sub.subSubCategories && (
+                            <div className="pl-2.5 space-y-0.5 border-l border-border-custom/10 ml-0.5">
+                              {sub.subSubCategories.map((subSub: any) => (
+                                <button
+                                  key={subSub._id}
+                                  onClick={() => setSelectedCategory(subSub._id)}
+                                  className={`block text-[10px] font-medium cursor-pointer transition-colors text-left ${
+                                    selectedCategory === subSub._id ? 'text-rose font-bold' : 'text-light-brown hover:text-rose'
+                                  }`}
+                                >
+                                  {subSub.name}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           </div>
@@ -458,7 +534,9 @@ function ShopContent() {
                     {/* Product Details */}
                     <div className="px-1 text-center">
                       <p className="text-[10px] tracking-widest text-light-brown uppercase mb-1">
-                        {product.category}
+                        {typeof product.category === 'object' && product.category
+                          ? product.category.name
+                          : product.category}
                       </p>
                       
                       <Link href={`/products/${product._id}`}>
@@ -545,19 +623,68 @@ function ShopContent() {
                 <div>
                   <h3 className="text-xs tracking-wider font-bold text-foreground mb-3 uppercase">Category</h3>
                   <div className="space-y-2">
-                    {categories.map((cat) => (
-                      <button
-                        key={cat}
-                        onClick={() => {
-                          setSelectedCategory(cat);
-                          setIsMobileFiltersOpen(false);
-                        }}
-                        className={`block text-xs font-medium cursor-pointer ${
-                          selectedCategory === cat ? 'text-rose font-bold' : 'text-mid'
-                        }`}
-                      >
-                        {cat}
-                      </button>
+                    <button
+                      onClick={() => {
+                        setSelectedCategory('All');
+                        setIsMobileFiltersOpen(false);
+                      }}
+                      className={`block text-xs font-medium cursor-pointer ${
+                        selectedCategory === 'All' ? 'text-rose font-bold' : 'text-mid'
+                      }`}
+                    >
+                      All Collection
+                    </button>
+                    {buildSidebarCategories().map((cat) => (
+                      <div key={cat._id} className="pl-1 space-y-1">
+                        <button
+                          onClick={() => {
+                            setSelectedCategory(cat._id);
+                            setIsMobileFiltersOpen(false);
+                          }}
+                          className={`block text-xs font-bold cursor-pointer transition-colors text-left ${
+                            selectedCategory === cat._id ? 'text-rose' : 'text-foreground'
+                          }`}
+                        >
+                          {cat.name}
+                        </button>
+                        {cat.subCategories && (
+                          <div className="pl-2 space-y-1 border-l border-border-custom/30">
+                            {cat.subCategories.map((sub: any) => (
+                              <div key={sub._id}>
+                                <button
+                                  onClick={() => {
+                                    setSelectedCategory(sub._id);
+                                    setIsMobileFiltersOpen(false);
+                                  }}
+                                  className={`block text-[11px] font-semibold cursor-pointer transition-colors text-left ${
+                                    selectedCategory === sub._id ? 'text-rose' : 'text-mid'
+                                  }`}
+                                >
+                                  {sub.name}
+                                </button>
+                                {sub.subSubCategories && (
+                                  <div className="pl-2 space-y-0.5">
+                                    {sub.subSubCategories.map((subSub: any) => (
+                                      <button
+                                        key={subSub._id}
+                                        onClick={() => {
+                                          setSelectedCategory(subSub._id);
+                                          setIsMobileFiltersOpen(false);
+                                        }}
+                                        className={`block text-[10px] font-medium cursor-pointer transition-colors text-left ${
+                                          selectedCategory === subSub._id ? 'text-rose font-bold' : 'text-light-brown'
+                                        }`}
+                                      >
+                                        {subSub.name}
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     ))}
                   </div>
                 </div>

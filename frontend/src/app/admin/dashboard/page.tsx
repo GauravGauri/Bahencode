@@ -19,7 +19,8 @@ import {
   CheckCircle2,
   Inbox,
   Users,
-  FolderTree
+  FolderTree,
+  Star
 } from 'lucide-react';
 import API from '@/lib/api';
 import { getImageUrl } from '@/lib/utils';
@@ -105,10 +106,56 @@ const PREVIEW_USERS = [
 
 const CATEGORIES_FALLBACK = ['Tops', 'Bottoms', 'Dresses', 'Coord Sets', 'Winter Collection'];
 
+const PREVIEW_ORDERS = [
+  {
+    _id: 'order-1',
+    orderId: 'BH-582910',
+    customerDetails: {
+      fullName: 'Diya Sharma',
+      email: 'diya.sharma@gmail.com',
+      phone: '9876543210',
+      address: 'Flat 405, Rosewood Apts, Sector 45',
+      city: 'Gurugram',
+      state: 'Haryana',
+      pincode: '122003',
+    },
+    items: [
+      { name: 'Embroidered Peplum Top', price: 899, quantity: 1, size: 'S' },
+      { name: 'Classic Bell-Bottom Jeans', price: 1599, quantity: 1, size: 'M' }
+    ],
+    totalAmount: 2498,
+    paymentMethod: 'card',
+    paymentStatus: 'Paid',
+    orderStatus: 'Processing',
+    createdAt: '2026-05-24T13:00:00Z',
+  },
+  {
+    _id: 'order-2',
+    orderId: 'BH-109482',
+    customerDetails: {
+      fullName: 'Pooja Hegde',
+      email: 'pooja.hegde@outlook.com',
+      phone: '9988776655',
+      address: '12-A, Jubilee Hills',
+      city: 'Hyderabad',
+      state: 'Telangana',
+      pincode: '500033',
+    },
+    items: [
+      { name: 'Cropped Linen Shirt', price: 799, quantity: 2, size: 'M' }
+    ],
+    totalAmount: 1598,
+    paymentMethod: 'cod',
+    paymentStatus: 'Pending',
+    orderStatus: 'Shipped',
+    createdAt: '2026-05-23T06:45:00Z',
+  }
+];
+
 export default function AdminDashboard() {
   const router = useRouter();
   const [adminUser, setAdminUser] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'messages' | 'users' | 'categories'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'messages' | 'users' | 'categories' | 'orders' | 'reviews'>('overview');
   const [mounted, setMounted] = useState(false);
 
   const formatDate = (dateStr: string, options?: Intl.DateTimeFormatOptions) => {
@@ -121,7 +168,88 @@ export default function AdminDashboard() {
   const [messages, setMessages] = useState<any[]>(PREVIEW_MESSAGES);
   const [users, setUsers] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const getCategoryPath = (cat: any) => {
+    if (!cat) return '';
+    if (typeof cat === 'string') {
+      const matched = categories.find(c => c._id === cat || c.name === cat);
+      if (matched) return getCategoryPath(matched);
+      return cat;
+    }
+    const parts = [cat.name];
+    let current = cat.parent;
+    while (current) {
+      if (typeof current === 'object' && current) {
+        parts.unshift(current.name);
+        current = current.parent;
+      } else {
+        const found = categories.find(c => c._id === current);
+        if (found) {
+          parts.unshift(found.name);
+          current = found.parent;
+        } else {
+          current = null;
+        }
+      }
+    }
+    return parts.join(' > ');
+  };
+
+  const updateOrderStatus = async (id: string, newStatus: string) => {
+    try {
+      const response = await API.put(`/orders/${id}/status`, { orderStatus: newStatus });
+      if (response.data?.success) {
+        triggerAlert('success', `Order status updated to ${newStatus}`);
+        loadOrderStatusData();
+      }
+    } catch (err: any) {
+      console.warn('API update failed. Simulating locally.');
+      setOrders((prev) =>
+        prev.map((o) => (o._id === id ? { ...o, orderStatus: newStatus, paymentStatus: newStatus === 'Delivered' ? 'Paid' : o.paymentStatus } : o))
+      );
+      triggerAlert('success', `Simulated order status update to ${newStatus}`);
+    }
+  };
+
+  const loadOrderStatusData = async () => {
+    try {
+      const ordersRes = await API.get('/orders');
+      if (ordersRes.data && ordersRes.data.orders) {
+        setOrders(ordersRes.data.orders);
+      }
+    } catch (e) {
+      console.warn('Failed reloading orders');
+    }
+  };
+
+  const loadReviewsData = async () => {
+    try {
+      const res = await API.get('/reviews');
+      if (res.data && res.data.reviews) {
+        setReviews(res.data.reviews);
+      }
+    } catch (e) {
+      console.warn('Failed reloading reviews');
+    }
+  };
+
+  const handleDeleteReview = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this review?')) return;
+    try {
+      const response = await API.delete(`/reviews/${id}`);
+      if (response.data?.success) {
+        triggerAlert('success', 'Review deleted successfully!');
+        loadReviewsData();
+      }
+    } catch (err: any) {
+      console.warn('API review deletion failed. Simulating deletion locally.');
+      setReviews((prev) => prev.filter((r) => r._id !== id));
+      triggerAlert('success', 'Review deletion simulated (offline mode).');
+    }
+  };
 
   // Success/Error Feedback Alerts
   const [alert, setAlert] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -211,6 +339,47 @@ export default function AdminDashboard() {
         console.warn('API connection issue loading categories. Using mock categories.');
         setCategories(PREVIEW_CATEGORIES);
       }
+
+      // Orders fetch
+      try {
+        const ordersRes = await API.get('/orders');
+        if (ordersRes.data && ordersRes.data.orders) {
+          setOrders(ordersRes.data.orders);
+        }
+      } catch (err) {
+        console.warn('API connection issue loading orders. Using mock orders.');
+        setOrders(PREVIEW_ORDERS);
+      }
+
+      // Reviews fetch
+      try {
+        const reviewsRes = await API.get('/reviews');
+        if (reviewsRes.data && reviewsRes.data.reviews) {
+          setReviews(reviewsRes.data.reviews);
+        }
+      } catch (err) {
+        console.warn('API connection issue loading reviews. Using mock reviews.');
+        setReviews([
+          {
+            _id: 'rev-1',
+            name: 'Aanya Sharma',
+            email: 'aanya@gmail.com',
+            rating: 5,
+            comment: 'Absolutely love the fabric quality and fits like a dream! Highly recommended.',
+            product: { name: 'Lilac Breeze Peplum Top' },
+            createdAt: '2026-05-21T12:00:00Z',
+          },
+          {
+            _id: 'rev-2',
+            name: 'Pooja Patel',
+            email: 'pooja@gmail.com',
+            rating: 4,
+            comment: 'Super soft material and gorgeous color. Took 4 days to deliver, otherwise 5 stars.',
+            product: { name: 'Seventies Blush Bell Bottoms' },
+            createdAt: '2026-05-14T15:30:00Z',
+          }
+        ]);
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -268,7 +437,8 @@ export default function AdminDashboard() {
           formData.append('images', imageFiles[i]);
         }
       } else if (imageUrlString) {
-        formData.append('images', imageUrlString);
+        const urls = imageUrlString.split(',').map(url => url.trim()).filter(Boolean);
+        urls.forEach(url => formData.append('images', url));
       } else {
         triggerAlert('error', 'Please supply a product image file or static URL.');
         return;
@@ -302,7 +472,7 @@ export default function AdminDashboard() {
         inStock: Number(formStock) > 0,
         isNewIn: formIsNewIn,
         isBestseller: formIsBestseller,
-        images: [imageUrlString || 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=600&auto=format&fit=crop'],
+        images: imageUrlString ? imageUrlString.split(',').map(url => url.trim()).filter(Boolean) : ['https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=600&auto=format&fit=crop'],
       };
 
       setProducts((prev) => [newMockItem, ...prev]);
@@ -319,12 +489,12 @@ export default function AdminDashboard() {
     setFormDescription(product.description || '');
     setFormPrice(String(product.price));
     setFormDiscountPrice(product.discountPrice ? String(product.discountPrice) : '');
-    setFormCategory(product.category);
+    setFormCategory(typeof product.category === 'object' && product.category ? product.category._id : product.category);
     setFormStock(String(product.stockQuantity || 10));
     setFormSizes(product.sizes || ['S', 'M', 'L']);
     setFormIsNewIn(product.isNewIn || false);
     setFormIsBestseller(product.isBestseller || false);
-    setImageUrlString(product.images?.[0] || '');
+    setImageUrlString(product.images ? product.images.join(', ') : '');
     setImageFiles(null);
     setIsEditModalOpen(true);
   };
@@ -350,8 +520,9 @@ export default function AdminDashboard() {
         for (let i = 0; i < imageFiles.length; i++) {
           formData.append('images', imageFiles[i]);
         }
-      } else {
-        formData.append('images', imageUrlString);
+      } else if (imageUrlString) {
+        const urls = imageUrlString.split(',').map(url => url.trim()).filter(Boolean);
+        urls.forEach(url => formData.append('images', url));
       }
 
       const response = await API.put(`/products/${selectedProduct._id}`, formData, {
@@ -382,7 +553,7 @@ export default function AdminDashboard() {
                 isNewIn: formIsNewIn,
                 isBestseller: formIsBestseller,
                 sizes: formSizes,
-                images: [imageUrlString || p.images[0]],
+                images: imageUrlString ? imageUrlString.split(',').map(url => url.trim()).filter(Boolean) : p.images,
               }
             : p
         )
@@ -471,7 +642,7 @@ export default function AdminDashboard() {
     setFormDescription('');
     setFormPrice('');
     setFormDiscountPrice('');
-    setFormCategory(categories[0]?.name || 'Tops');
+    setFormCategory(categories[0]?._id || 'Tops');
     setFormStock('10');
     setFormSizes(['S', 'M', 'L']);
     setFormIsNewIn(false);
@@ -487,6 +658,8 @@ export default function AdminDashboard() {
   const bestsellersCount = products.filter((p) => p.isBestseller).length;
   const newArrivalsCount = products.filter((p) => p.isNewIn).length;
   const messagesCount = messages.length;
+  const totalRevenue = orders.filter(o => o.orderStatus !== 'Cancelled').reduce((acc, o) => acc + o.totalAmount, 0);
+  const totalOrdersCount = orders.length;
 
   return (
     <div className="min-h-screen bg-cream/20 flex flex-col md:flex-row text-foreground">
@@ -556,6 +729,22 @@ export default function AdminDashboard() {
           </button>
 
           <button
+            onClick={() => setActiveTab('orders')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold tracking-wider uppercase transition-all cursor-pointer ${
+              activeTab === 'orders'
+                ? 'bg-rose text-white shadow-sm'
+                : 'hover:bg-cream/10 text-cream/70 hover:text-cream'
+            }`}
+          >
+            <ShoppingBag size={15} /> Orders Tracking
+            {orders.length > 0 && (
+              <span className="ml-auto bg-rose text-white text-[9px] font-bold rounded-full w-4.5 h-4.5 flex items-center justify-center">
+                {orders.length}
+              </span>
+            )}
+          </button>
+
+          <button
             onClick={() => setActiveTab('users')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold tracking-wider uppercase transition-all cursor-pointer ${
               activeTab === 'users'
@@ -567,6 +756,22 @@ export default function AdminDashboard() {
             {users.length > 0 && (
               <span className="ml-auto bg-rose text-white text-[9px] font-bold rounded-full w-4.5 h-4.5 flex items-center justify-center">
                 {users.length}
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => setActiveTab('reviews')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold tracking-wider uppercase transition-all cursor-pointer ${
+              activeTab === 'reviews'
+                ? 'bg-rose text-white shadow-sm'
+                : 'hover:bg-cream/10 text-cream/70 hover:text-cream'
+            }`}
+          >
+            <Star size={15} /> Customer Reviews
+            {reviews.length > 0 && (
+              <span className="ml-auto bg-rose text-white text-[9px] font-bold rounded-full w-4.5 h-4.5 flex items-center justify-center">
+                {reviews.length}
               </span>
             )}
           </button>
@@ -604,6 +809,8 @@ export default function AdminDashboard() {
               {activeTab === 'messages' && 'Customer Inquiries'}
               {activeTab === 'categories' && 'Category Management'}
               {activeTab === 'users' && 'Registered Users'}
+              {activeTab === 'orders' && 'Orders Tracking'}
+              {activeTab === 'reviews' && 'Reviews Moderation'}
             </h1>
             <p className="text-xs text-light-brown font-medium mt-1">
               Store status: <span className="text-green-600 font-bold">Online</span> ✦ System operating normally
@@ -652,12 +859,12 @@ export default function AdminDashboard() {
 
               {/* Card 2 */}
               <div className="bg-background border border-border-custom p-6 rounded-2xl shadow-sm flex items-center gap-4">
-                <div className="p-4 bg-rose/10 rounded-full text-mid">
-                  <Inbox size={20} />
+                <div className="p-4 bg-rose/10 rounded-full text-rose">
+                  <DollarSign size={20} />
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase tracking-wider text-light-brown font-bold">Inbox Messages</p>
-                  <p className="font-playfair text-2xl font-bold mt-1">{messagesCount}</p>
+                  <p className="text-[10px] uppercase tracking-wider text-light-brown font-bold">Total Revenue</p>
+                  <p className="font-playfair text-2xl font-bold mt-1">₹{totalRevenue}</p>
                 </div>
               </div>
 
@@ -675,13 +882,11 @@ export default function AdminDashboard() {
               {/* Card 4 */}
               <div className="bg-background border border-border-custom p-6 rounded-2xl shadow-sm flex items-center gap-4">
                 <div className="p-4 bg-green-50 rounded-full text-green-600">
-                  <DollarSign size={20} />
+                  <ShoppingBag size={20} />
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase tracking-wider text-light-brown font-bold">Average Price</p>
-                  <p className="font-playfair text-2xl font-bold mt-1">
-                    ₹{Math.round(products.reduce((acc, p) => acc + p.price, 0) / (totalProducts || 1))}
-                  </p>
+                  <p className="text-[10px] uppercase tracking-wider text-light-brown font-bold">Total Orders</p>
+                  <p className="font-playfair text-2xl font-bold mt-1">{totalOrdersCount}</p>
                 </div>
               </div>
 
@@ -731,6 +936,44 @@ export default function AdminDashboard() {
 
             </div>
 
+            {/* Recent Orders Overview Row */}
+            {orders && orders.length > 0 && (
+              <div className="bg-background border border-border-custom p-6 rounded-2xl shadow-sm space-y-4 pt-4 mt-6">
+                <div className="flex justify-between items-center border-b border-border-custom/30 pb-3">
+                  <h3 className="font-playfair text-base font-bold text-foreground">Recent Orders</h3>
+                  <button
+                    onClick={() => setActiveTab('orders')}
+                    className="text-rose text-xs font-bold hover:underline tracking-wider uppercase"
+                  >
+                    View All Orders
+                  </button>
+                </div>
+                <div className="divide-y divide-border-custom/40">
+                  {orders.slice(0, 3).map((o) => (
+                    <div key={o._id} className="py-3.5 flex items-center justify-between first:pt-0 last:pb-0 text-xs">
+                      <div>
+                        <span className="font-bold text-rose">{o.orderId}</span>
+                        <span className="text-foreground ml-3 font-semibold">{o.customerDetails.fullName}</span>
+                        <span className="text-[10px] text-light-brown ml-2">({o.customerDetails.city})</span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="font-bold text-foreground">₹{o.totalAmount}</span>
+                        <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase ${
+                          o.orderStatus === 'Delivered'
+                            ? 'bg-green-50 text-green-600'
+                            : o.orderStatus === 'Shipped'
+                            ? 'bg-blue-50 text-blue-600'
+                            : 'bg-yellow-50 text-yellow-600'
+                        }`}>
+                          {o.orderStatus}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
           </div>
         )}
 
@@ -760,7 +1003,7 @@ export default function AdminDashboard() {
                       </td>
 
                       {/* Category */}
-                      <td className="p-4 font-semibold text-mid">{p.category}</td>
+                      <td className="p-4 font-semibold text-mid">{getCategoryPath(p.category)}</td>
 
                       {/* Price */}
                       <td className="p-4 font-bold">₹{p.price}</td>
@@ -996,7 +1239,7 @@ export default function AdminDashboard() {
                           <tr key={cat._id} className="hover:bg-cream/10 transition-colors">
                             <td className="p-4 font-bold text-foreground">{cat.name}</td>
                             <td className="p-4 text-mid font-medium">
-                              {parentName ? `${parentName} > ${cat.name}` : cat.name}
+                              {getCategoryPath(cat)}
                             </td>
                             <td className="p-4">
                               <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
@@ -1023,6 +1266,200 @@ export default function AdminDashboard() {
               </div>
             </div>
 
+          </div>
+        )}
+
+        {/* ORDERS TRACKING */}
+        {activeTab === 'orders' && (
+          <div className="space-y-6 animate-fadeIn">
+            {orders.length === 0 ? (
+              <div className="text-center py-20 bg-background rounded-2xl border border-dashed border-border-custom">
+                <ShoppingBag size={32} className="mx-auto text-light-brown mb-4" />
+                <h3 className="font-playfair text-lg font-bold">No Orders Found</h3>
+                <p className="text-xs text-light-brown mt-1">Store order database is currently empty.</p>
+              </div>
+            ) : (
+              <div className="bg-background border border-border-custom rounded-2xl overflow-hidden shadow-sm">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="bg-cream/40 border-b border-border-custom text-foreground font-bold uppercase tracking-wider">
+                        <th className="p-4">Order ID</th>
+                        <th className="p-4">Customer</th>
+                        <th className="p-4">Items</th>
+                        <th className="p-4">Total</th>
+                        <th className="p-4">Method</th>
+                        <th className="p-4">Status</th>
+                        <th className="p-4">Date</th>
+                        <th className="p-4 text-center">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border-custom/40">
+                      {orders.map((o) => (
+                        <tr key={o._id} className="hover:bg-cream/10 transition-colors">
+                          <td className="p-4 font-bold text-rose">{o.orderId}</td>
+                          <td className="p-4">
+                            <div className="font-bold text-foreground">{o.customerDetails.fullName}</div>
+                            <div className="text-[10px] text-light-brown mt-0.5">{o.customerDetails.phone} | {o.customerDetails.email}</div>
+                            <div className="text-[10px] text-light-brown truncate max-w-xs">{o.customerDetails.address}, {o.customerDetails.city}</div>
+                          </td>
+                          <td className="p-4">
+                            <div className="space-y-1">
+                              {o.items.map((item: any, idx: number) => (
+                                <div key={idx} className="font-medium text-foreground">
+                                  {item.name} <span className="text-rose font-bold">({item.size})</span> x {item.quantity}
+                                </div>
+                              ))}
+                            </div>
+                          </td>
+                          <td className="p-4 font-bold text-foreground">₹{o.totalAmount}</td>
+                          <td className="p-4">
+                            <span className="uppercase font-bold text-[10px] text-mid">{o.paymentMethod}</span>
+                            <span className={`block text-[9px] font-bold mt-0.5 ${o.paymentStatus === 'Paid' ? 'text-green-600' : 'text-orange-600'}`}>
+                              ({o.paymentStatus})
+                            </span>
+                          </td>
+                          <td className="p-4">
+                            <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase ${
+                              o.orderStatus === 'Delivered'
+                                ? 'bg-green-50 text-green-600'
+                                : o.orderStatus === 'Shipped'
+                                ? 'bg-blue-50 text-blue-600'
+                                : o.orderStatus === 'Cancelled'
+                                ? 'bg-red-50 text-red-600'
+                                : 'bg-yellow-50 text-yellow-600'
+                            }`}>
+                              {o.orderStatus}
+                            </span>
+                          </td>
+                          <td className="p-4 text-light-brown font-medium">{formatDate(o.createdAt)}</td>
+                          <td className="p-4 text-center">
+                            <select
+                              value={o.orderStatus}
+                              onChange={(e) => updateOrderStatus(o._id, e.target.value)}
+                              className="border border-border-custom px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-cream text-foreground focus:outline-none cursor-pointer"
+                            >
+                              <option value="Processing">Processing</option>
+                              <option value="Shipped">Shipped</option>
+                              <option value="Delivered">Delivered</option>
+                              <option value="Cancelled">Cancelled</option>
+                            </select>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* REGISTERED USERS */}
+        {activeTab === 'users' && (
+          <div className="space-y-6 animate-fadeIn">
+            {users.length === 0 ? (
+              <div className="text-center py-20 bg-background rounded-2xl border border-dashed border-border-custom">
+                <Users size={32} className="mx-auto text-light-brown mb-4" />
+                <h3 className="font-playfair text-lg font-bold">No Users Found</h3>
+              </div>
+            ) : (
+              <div className="bg-background border border-border-custom rounded-2xl overflow-hidden shadow-sm">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="bg-cream/40 border-b border-border-custom text-foreground font-bold uppercase tracking-wider">
+                        <th className="p-4">Username</th>
+                        <th className="p-4">Email</th>
+                        <th className="p-4">Role</th>
+                        <th className="p-4">Registered Date</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border-custom/40">
+                      {users.map((u) => (
+                        <tr key={u._id} className="hover:bg-cream/10 transition-colors">
+                          <td className="p-4 font-bold text-foreground">{u.username}</td>
+                          <td className="p-4 font-semibold text-mid">{u.email}</td>
+                          <td className="p-4">
+                            <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase ${
+                              u.role === 'admin' ? 'bg-rose/10 text-rose' : 'bg-cream text-light-brown'
+                            }`}>
+                              {u.role}
+                            </span>
+                          </td>
+                          <td className="p-4 text-light-brown font-medium">{formatDate(u.createdAt)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* CUSTOMER REVIEWS */}
+        {activeTab === 'reviews' && (
+          <div className="space-y-6 animate-fadeIn">
+            {reviews.length === 0 ? (
+              <div className="text-center py-20 bg-background rounded-2xl border border-dashed border-border-custom">
+                <Star size={32} className="mx-auto text-light-brown mb-4 text-rose animate-pulse" />
+                <h3 className="font-playfair text-lg font-bold">No Reviews Received</h3>
+                <p className="text-xs text-light-brown mt-1">Customers have not written any product reviews yet.</p>
+              </div>
+            ) : (
+              <div className="bg-background border border-border-custom rounded-2xl overflow-hidden shadow-sm">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="bg-cream/40 border-b border-border-custom text-foreground font-bold uppercase tracking-wider">
+                        <th className="p-4">Customer</th>
+                        <th className="p-4">Outfit Name</th>
+                        <th className="p-4">Rating</th>
+                        <th className="p-4">Comment</th>
+                        <th className="p-4">Submitted Date</th>
+                        <th className="p-4 text-center">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border-custom/40">
+                      {reviews.map((rev) => (
+                        <tr key={rev._id} className="hover:bg-cream/10 transition-colors">
+                          <td className="p-4">
+                            <div className="font-bold text-foreground">{rev.name}</div>
+                            <div className="text-[10px] text-light-brown">{rev.email}</div>
+                          </td>
+                          <td className="p-4 font-bold text-mid">
+                            {rev.product ? rev.product.name : 'Unknown Product'}
+                          </td>
+                          <td className="p-4">
+                            <div className="flex text-amber-500 text-[11px]">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <span key={star}>
+                                  {star <= rev.rating ? '★' : '☆'}
+                                </span>
+                              ))}
+                            </div>
+                          </td>
+                          <td className="p-4 text-mid font-medium max-w-xs truncate" title={rev.comment}>
+                            {rev.comment}
+                          </td>
+                          <td className="p-4 text-light-brown font-medium">{formatDate(rev.createdAt)}</td>
+                          <td className="p-4 text-center">
+                            <button
+                              onClick={() => handleDeleteReview(rev._id)}
+                              className="p-2 hover:bg-red-50 text-mid hover:text-red-500 rounded-lg transition-colors cursor-pointer"
+                              title="Delete Review"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -1111,14 +1548,11 @@ export default function AdminDashboard() {
                     className="w-full px-4 py-2.5 border border-border-custom rounded-xl bg-cream/10 focus:outline-none focus:border-rose text-foreground cursor-pointer"
                   >
                     {categories.length > 0
-                      ? categories.map((cat) => {
-                          const parentName = typeof cat.parent === 'object' && cat.parent ? cat.parent.name : null;
-                          return (
-                            <option key={cat._id} value={cat.name}>
-                              {parentName ? `${parentName} > ` : ''}{cat.name}
+                      ? categories.map((cat) => (
+                            <option key={cat._id} value={cat._id}>
+                              {getCategoryPath(cat)}
                             </option>
-                          );
-                        })
+                        ))
                       : CATEGORIES_FALLBACK.map((cat) => (
                           <option key={cat} value={cat}>{cat}</option>
                         ))}
@@ -1170,15 +1604,44 @@ export default function AdminDashboard() {
 
                 {/* URL input */}
                 <div>
-                  <label className="block text-[9px] font-bold text-light-brown mb-1.5 uppercase tracking-wider">Link Image URL</label>
+                  <label className="block text-[9px] font-bold text-light-brown mb-1.5 uppercase tracking-wider">Link Image URLs (separated by commas)</label>
                   <input
                     type="text"
                     value={imageUrlString}
                     onChange={(e) => setImageUrlString(e.target.value)}
-                    placeholder="https://images.unsplash.com/photo-..."
+                    placeholder="https://image1.jpg, https://image2.jpg"
                     className="w-full px-4 py-2 border border-border-custom rounded-xl bg-background focus:outline-none focus:border-rose text-foreground"
                   />
                 </div>
+
+                {/* Previews */}
+                {(imageUrlString || (imageFiles && imageFiles.length > 0)) && (
+                  <div className="flex gap-2.5 overflow-x-auto pb-1 mt-2.5 pt-2 border-t border-border-custom/30">
+                    {imageFiles && Array.from(imageFiles).map((file, idx) => (
+                      <div key={`file-${idx}`} className="relative w-16 aspect-[3/4] rounded-lg overflow-hidden border border-border-custom/40 flex-shrink-0">
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt="preview"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ))}
+                    {imageUrlString && imageUrlString.split(',').map((url, idx) => {
+                      const trimmed = url.trim();
+                      if (!trimmed) return null;
+                      return (
+                        <div key={`url-${idx}`} className="relative w-16 aspect-[3/4] rounded-lg overflow-hidden border border-border-custom/40 flex-shrink-0">
+                          <img
+                            src={trimmed}
+                            alt="preview"
+                            className="w-full h-full object-cover"
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* Badges selection */}
@@ -1299,14 +1762,11 @@ export default function AdminDashboard() {
                     className="w-full px-4 py-2.5 border border-border-custom rounded-xl bg-cream/10 focus:outline-none focus:border-rose text-foreground cursor-pointer"
                   >
                     {categories.length > 0
-                      ? categories.map((cat) => {
-                          const parentName = typeof cat.parent === 'object' && cat.parent ? cat.parent.name : null;
-                          return (
-                            <option key={cat._id} value={cat.name}>
-                              {parentName ? `${parentName} > ` : ''}{cat.name}
+                      ? categories.map((cat) => (
+                            <option key={cat._id} value={cat._id}>
+                              {getCategoryPath(cat)}
                             </option>
-                          );
-                        })
+                        ))
                       : CATEGORIES_FALLBACK.map((cat) => (
                           <option key={cat} value={cat}>{cat}</option>
                         ))}
@@ -1354,15 +1814,44 @@ export default function AdminDashboard() {
                 <div className="flex items-center justify-center my-1 text-light-brown font-bold">OR</div>
 
                 <div>
-                  <label className="block text-[9px] font-bold text-light-brown mb-1.5 uppercase tracking-wider">Image Link URL</label>
+                  <label className="block text-[9px] font-bold text-light-brown mb-1.5 uppercase tracking-wider">Image Link URLs (separated by commas)</label>
                   <input
                     type="text"
                     value={imageUrlString}
                     onChange={(e) => setImageUrlString(e.target.value)}
-                    placeholder="https://images.unsplash.com/photo-..."
+                    placeholder="https://image1.jpg, https://image2.jpg"
                     className="w-full px-4 py-2 border border-border-custom rounded-xl bg-background focus:outline-none focus:border-rose text-foreground"
                   />
                 </div>
+
+                {/* Previews */}
+                {(imageUrlString || (imageFiles && imageFiles.length > 0)) && (
+                  <div className="flex gap-2.5 overflow-x-auto pb-1 mt-2.5 pt-2 border-t border-border-custom/30">
+                    {imageFiles && Array.from(imageFiles).map((file, idx) => (
+                      <div key={`file-${idx}`} className="relative w-16 aspect-[3/4] rounded-lg overflow-hidden border border-border-custom/40 flex-shrink-0">
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt="preview"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ))}
+                    {imageUrlString && imageUrlString.split(',').map((url, idx) => {
+                      const trimmed = url.trim();
+                      if (!trimmed) return null;
+                      return (
+                        <div key={`url-${idx}`} className="relative w-16 aspect-[3/4] rounded-lg overflow-hidden border border-border-custom/40 flex-shrink-0">
+                          <img
+                            src={trimmed}
+                            alt="preview"
+                            className="w-full h-full object-cover"
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* Badges selection */}

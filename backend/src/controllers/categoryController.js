@@ -5,7 +5,14 @@ const Category = require('../models/Category');
 // @access  Public
 exports.getCategories = async (req, res) => {
   try {
-    const categories = await Category.find().populate('parent', 'name');
+    const categories = await Category.find().populate({
+      path: 'parent',
+      select: 'name parent',
+      populate: {
+        path: 'parent',
+        select: 'name'
+      }
+    });
     res.status(200).json({
       success: true,
       count: categories.length,

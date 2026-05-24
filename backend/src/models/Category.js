@@ -4,7 +4,6 @@ const CategorySchema = new mongoose.Schema({
   name: {
     type: String,
     required: [true, 'Please add a category name'],
-    unique: true,
     trim: true,
     maxlength: [50, 'Category name cannot exceed 50 characters'],
   },
@@ -18,5 +17,8 @@ const CategorySchema = new mongoose.Schema({
     default: Date.now,
   },
 });
+
+// Add compound index for unique name under same parent
+CategorySchema.index({ name: 1, parent: 1 }, { unique: true });
 
 module.exports = mongoose.model('Category', CategorySchema);

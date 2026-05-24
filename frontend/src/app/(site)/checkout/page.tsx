@@ -7,6 +7,7 @@ import { ShoppingBag, ArrowLeft, CheckCircle2, Ticket, CreditCard, ShieldCheck }
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { getImageUrl } from '@/lib/utils';
+import API from '@/lib/api';
 
 interface CheckoutFormData {
   fullName: string;
@@ -58,12 +59,17 @@ export default function CheckoutPage() {
 
   const applyPromo = () => {
     setPromoError('');
-    if (promoCode.trim().toUpperCase() === 'BEHEN10') {
+    const code = promoCode.trim().toUpperCase();
+    if (code === 'WELCOME10') {
       const discount = Math.round(cartTotal * 0.1);
       setPromoDiscount(discount);
       setPromoApplied(true);
+    } else if (code === 'FASHION20') {
+      const discount = Math.round(cartTotal * 0.2);
+      setPromoDiscount(discount);
+      setPromoApplied(true);
     } else {
-      setPromoError('Invalid coupon code. Try BEHEN10');
+      setPromoError('Invalid coupon code. Try WELCOME10 or FASHION20');
     }
   };
 
@@ -72,14 +78,46 @@ export default function CheckoutPage() {
   const onSubmit = async (data: CheckoutFormData) => {
     setIsSubmitting(true);
     
-    // Simulate order placement
-    setTimeout(() => {
-      const randomOrderId = 'BH-' + Math.floor(100000 + Math.random() * 900000);
-      setOrderId(randomOrderId);
-      setIsSuccess(true);
-      clearCart();
+    try {
+      const orderItems = cartItems.map(item => ({
+        product: item._id,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        size: item.size,
+      }));
+
+      const orderPayload = {
+        customerDetails: {
+          fullName: data.fullName,
+          email: data.email,
+          phone: data.phone,
+          address: data.address,
+          city: data.city,
+          state: data.state,
+          pincode: data.pincode,
+        },
+        items: orderItems,
+        paymentMethod: data.paymentMethod,
+        couponCode: promoApplied ? promoCode.trim().toUpperCase() : undefined,
+      };
+
+      const response = await API.post('/orders', orderPayload);
+      
+      if (response.data?.success && response.data?.order) {
+        setOrderId(response.data.order.orderId);
+        setIsSuccess(true);
+        clearCart();
+      } else {
+        alert(response.data?.message || 'Failed to place order.');
+      }
+    } catch (err: any) {
+      console.error('Order checkout submission error:', err);
+      const errMsg = err.response?.data?.message || err.message || 'Server error placing order.';
+      alert(`Checkout failed: ${errMsg}`);
+    } finally {
       setIsSubmitting(false);
-    }, 1500);
+    }
   };
 
   // If order is placed successfully, render Success Screen
@@ -357,7 +395,7 @@ export default function CheckoutPage() {
               <div className="flex gap-2">
                 <input
                   type="text"
-                  placeholder="Coupon Code (BEHEN10)"
+                  placeholder="Coupon Code (WELCOME10)"
                   value={promoCode}
                   onChange={(e) => setPromoCode(e.target.value)}
                   disabled={promoApplied}
@@ -374,7 +412,7 @@ export default function CheckoutPage() {
               </div>
               {promoApplied && (
                 <span className="text-[10px] text-green-600 font-bold flex items-center gap-1">
-                  <Ticket size={12} /> Coupon applied! 10% discount saved.
+                  <Ticket size={12} /> Coupon applied successfully!
                 </span>
               )}
               {promoError && (

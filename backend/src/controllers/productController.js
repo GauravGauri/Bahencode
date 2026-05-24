@@ -1,4 +1,6 @@
 const Product = require('../models/Product');
+const Category = require('../models/Category');
+const mongoose = require('mongoose');
 const fs = require('fs');
 const path = require('path');
 
@@ -9,7 +11,28 @@ exports.getProducts = async (req, res) => {
     let query = {};
 
     if (category) {
-      query.category = category;
+      let targetCategory = null;
+      if (mongoose.Types.ObjectId.isValid(category)) {
+        targetCategory = await Category.findById(category);
+      } else {
+        targetCategory = await Category.findOne({ name: { $regex: new RegExp('^' + category.trim() + '$', 'i') } });
+      }
+
+      if (targetCategory) {
+        const getDescendantIds = async (parentId) => {
+          let ids = [parentId];
+          const children = await Category.find({ parent: parentId });
+          for (const child of children) {
+            const childIds = await getDescendantIds(child._id);
+            ids = [...ids, ...childIds];
+          }
+          return ids;
+        };
+        const categoryIds = await getDescendantIds(targetCategory._id);
+        query.category = { $in: categoryIds };
+      } else {
+        query.category = null;
+      }
     }
 
     if (size) {
@@ -34,7 +57,13 @@ exports.getProducts = async (req, res) => {
       query.isNewIn = isNewIn === 'true';
     }
 
-    let queryExec = Product.find(query);
+    let queryExec = Product.find(query).populate({
+      path: 'category',
+      populate: {
+        path: 'parent',
+        populate: { path: 'parent' }
+      }
+    });
 
     // Sorting
     if (sort) {
@@ -61,7 +90,13 @@ exports.getProducts = async (req, res) => {
 // Get single product details
 exports.getProduct = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findById(req.params.id).populate({
+      path: 'category',
+      populate: {
+        path: 'parent',
+        populate: { path: 'parent' }
+      }
+    });
     if (!product) {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
@@ -92,12 +127,20 @@ exports.createProduct = async (req, res) => {
       processedSizes = sizes.split(',').map(s => s.trim().toUpperCase());
     }
 
+    let resolvedCategory = category;
+    if (category && !mongoose.Types.ObjectId.isValid(category)) {
+      const catObj = await Category.findOne({ name: { $regex: new RegExp('^' + category.trim() + '$', 'i') } });
+      if (catObj) {
+        resolvedCategory = catObj._id;
+      }
+    }
+
     const product = await Product.create({
       name,
       description,
       price: Number(price),
       discountPrice: discountPrice ? Number(discountPrice) : undefined,
-      category,
+      category: resolvedCategory,
       sizes: processedSizes || ['S', 'M', 'L'],
       images,
       stockQuantity: stockQuantity ? Number(stockQuantity) : 10,
@@ -119,8 +162,10 @@ exports.updateProduct = async (req, res) => {
     if (!product) {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
-
     let images = product.images;
+    if (req.body.images) {
+      images = Array.isArray(req.body.images) ? req.body.images : [req.body.images];
+    }
     if (req.files && req.files.length > 0) {
       const newImages = req.files.map(file => `/uploads/${file.filename}`);
       images = [...images, ...newImages];
@@ -145,12 +190,20 @@ exports.updateProduct = async (req, res) => {
       processedSizes = req.body.sizes.split(',').map(s => s.trim().toUpperCase());
     }
 
+    let resolvedCategory = req.body.category || product.category;
+    if (req.body.category && !mongoose.Types.ObjectId.isValid(req.body.category)) {
+      const catObj = await Category.findOne({ name: { $regex: new RegExp('^' + req.body.category.trim() + '$', 'i') } });
+      if (catObj) {
+        resolvedCategory = catObj._id;
+      }
+    }
+
     const updatedData = {
       name: req.body.name || product.name,
       description: req.body.description || product.description,
       price: req.body.price ? Number(req.body.price) : product.price,
       discountPrice: req.body.discountPrice ? Number(req.body.discountPrice) : product.discountPrice,
-      category: req.body.category || product.category,
+      category: resolvedCategory,
       sizes: processedSizes || product.sizes,
       images,
       stockQuantity: req.body.stockQuantity !== undefined ? Number(req.body.stockQuantity) : product.stockQuantity,

@@ -3,10 +3,11 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ShoppingBag, Search, User, Sun, Moon, Menu, X } from 'lucide-react';
+import { ShoppingBag, Search, User, Sun, Moon, Menu, X, ChevronDown } from 'lucide-react';
 import { useTheme } from '@teispace/next-themes';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
+import API from '@/lib/api';
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -19,6 +20,68 @@ export default function Header() {
   const { theme, setTheme } = useTheme();
   const { cartCount, setIsCartOpen } = useCart();
   const { user, logout } = useAuth();
+  
+  // Category states
+  const [dbCategories, setDbCategories] = useState<any[]>([]);
+  const [activeMobileCat, setActiveMobileCat] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchCats = async () => {
+      try {
+        const res = await API.get('/categories');
+        if (res.data?.success) {
+          setDbCategories(res.data.categories);
+        }
+      } catch (err) {
+        console.warn('API error loading header categories.');
+      }
+    };
+    fetchCats();
+  }, []);
+
+  const buildCategoryTree = () => {
+    const level1 = dbCategories.filter(c => !c.parent);
+    if (level1.length === 0) {
+      // Fallback default structure
+      return [
+        {
+          _id: 'Men', name: 'Men',
+          subCategories: [
+            { _id: 'Men-Tops', name: 'Tops', subSubCategories: [] },
+            { _id: 'Men-Bottoms', name: 'Bottoms', subSubCategories: [] },
+            { _id: 'Men-Shoes', name: 'Shoes', subSubCategories: [] }
+          ]
+        },
+        {
+          _id: 'Women', name: 'Women',
+          subCategories: [
+            { _id: 'Women-Tops', name: 'Tops', subSubCategories: [] },
+            { _id: 'Women-Bottoms', name: 'Bottoms', subSubCategories: [] },
+            { _id: 'Women-Shoes', name: 'Shoes', subSubCategories: [] }
+          ]
+        },
+        {
+          _id: 'Child', name: 'Child',
+          subCategories: [
+            { _id: 'Child-Tops', name: 'Tops', subSubCategories: [] },
+            { _id: 'Child-Bottoms', name: 'Bottoms', subSubCategories: [] },
+            { _id: 'Child-Shoes', name: 'Shoes', subSubCategories: [] }
+          ]
+        }
+      ];
+    }
+    
+    return level1.map(l1 => {
+      const level2 = dbCategories.filter(c => c.parent && c.parent._id === l1._id);
+      const subCategories = level2.map(l2 => {
+        const level3 = dbCategories.filter(c => c.parent && c.parent._id === l2._id);
+        return { ...l2, subSubCategories: level3 };
+      });
+      return { ...l1, subCategories };
+    });
+  };
+
+  const categoryTree = buildCategoryTree();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -58,25 +121,65 @@ export default function Header() {
       >
         <div className="max-w-7xl mx-auto px-4 md:px-8 flex items-center justify-between relative">
           
-          {/* NAV LEFT (Desktop) */}
-          <nav className="hidden lg:flex items-center gap-8">
+          <nav className="hidden lg:flex items-center gap-6">
             <Link
               href="/shop"
               className={`text-xs tracking-widest font-semibold hover:text-rose transition-colors duration-200 ${
-                pathname === '/shop' ? 'text-rose' : 'text-foreground'
+                pathname === '/shop' && !router ? 'text-rose' : 'text-foreground'
               }`}
             >
-              SHOP
+              SHOP ALL
             </Link>
+
+            {/* Render Category hierarchy dynamically */}
+            {categoryTree.map(l1 => (
+              <div key={l1._id} className="relative group py-2">
+                <Link
+                  href={`/shop?category=${l1._id}`}
+                  className="text-xs tracking-widest font-semibold hover:text-rose text-foreground transition-colors duration-200 uppercase flex items-center gap-1 cursor-pointer"
+                >
+                  {l1.name} <ChevronDown size={10} className="text-light-brown group-hover:text-rose transition-colors" />
+                </Link>
+                
+                {l1.subCategories && l1.subCategories.length > 0 && (
+                  <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-[480px] bg-background border border-border-custom p-6 rounded-2xl shadow-xl z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 grid grid-cols-3 gap-6">
+                    {l1.subCategories.map((l2: any) => (
+                      <div key={l2._id} className="space-y-2 text-left">
+                        <Link 
+                          href={`/shop?category=${l2._id}`}
+                          className="font-bold text-xs uppercase text-foreground hover:text-rose transition-colors block border-b border-border-custom/30 pb-1"
+                        >
+                          {l2.name}
+                        </Link>
+                        {l2.subSubCategories && l2.subSubCategories.length > 0 && (
+                          <div className="space-y-1.5">
+                            {l2.subSubCategories.map((l3: any) => (
+                              <Link
+                                key={l3._id}
+                                href={`/shop?category=${l3._id}`}
+                                className="block text-[11px] text-mid hover:text-rose font-medium transition-colors"
+                              >
+                                {l3.name}
+                              </Link>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+
             <Link
               href="/shop?isNewIn=true"
-              className="text-xs tracking-widest font-semibold hover:text-rose transition-colors duration-200"
+              className="text-xs tracking-widest font-semibold hover:text-rose transition-colors duration-200 text-foreground"
             >
               NEW IN
             </Link>
             <Link
               href="/shop?isBestseller=true"
-              className="text-xs tracking-widest font-semibold hover:text-rose transition-colors duration-200"
+              className="text-xs tracking-widest font-semibold hover:text-rose transition-colors duration-200 text-foreground"
             >
               BESTSELLERS
             </Link>
@@ -86,15 +189,7 @@ export default function Header() {
                 pathname === '/about' ? 'text-rose' : 'text-foreground'
               }`}
             >
-              ABOUT US
-            </Link>
-            <Link
-              href="/contact"
-              className={`text-xs tracking-widest font-semibold hover:text-rose transition-colors duration-200 ${
-                pathname === '/contact' ? 'text-rose' : 'text-foreground'
-              }`}
-            >
-              CONTACT
+              ABOUT
             </Link>
           </nav>
 
@@ -243,10 +338,55 @@ export default function Header() {
             <Link
               href="/shop"
               onClick={() => setIsMobileMenuOpen(false)}
-              className="text-lg tracking-widest font-semibold hover:text-rose text-foreground"
+              className="text-sm tracking-widest font-semibold hover:text-rose text-foreground uppercase border-b border-border-custom/30 w-full text-center pb-2"
             >
               SHOP ALL
             </Link>
+
+            {/* Mobile dynamic categories */}
+            {categoryTree.map(l1 => {
+              const isOpen = activeMobileCat === l1._id;
+              return (
+                <div key={l1._id} className="w-full text-center">
+                  <button
+                    onClick={() => setActiveMobileCat(isOpen ? null : l1._id)}
+                    className="w-full text-sm tracking-widest font-semibold text-foreground uppercase flex items-center justify-center gap-1 py-1"
+                  >
+                    {l1.name} <ChevronDown size={12} className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  
+                  {isOpen && l1.subCategories && (
+                    <div className="bg-cream/20 py-2.5 my-1.5 rounded-xl border border-border-custom/25 space-y-3 animate-fadeIn">
+                      {l1.subCategories.map((l2: any) => (
+                        <div key={l2._id} className="space-y-1">
+                          <Link
+                            href={`/shop?category=${l2._id}`}
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className="text-xs font-bold text-foreground block hover:text-rose"
+                          >
+                            — {l2.name} —
+                          </Link>
+                          {l2.subSubCategories && (
+                            <div className="flex flex-wrap justify-center gap-2 px-4 py-1">
+                              {l2.subSubCategories.map((l3: any) => (
+                                <Link
+                                  key={l3._id}
+                                  href={`/shop?category=${l3._id}`}
+                                  onClick={() => setIsMobileMenuOpen(false)}
+                                  className="text-[10px] bg-cream text-mid px-2 py-0.5 rounded-full border border-border-custom/30 hover:text-rose hover:border-rose"
+                                >
+                                  {l3.name}
+                                </Link>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
             <Link
               href="/shop?isNewIn=true"
               onClick={() => setIsMobileMenuOpen(false)}
