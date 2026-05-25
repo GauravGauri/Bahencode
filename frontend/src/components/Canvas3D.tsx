@@ -54,14 +54,14 @@ const BlossomMesh: React.FC<FlowerProps> = ({ color, position, speed, scale }) =
 
 // Controls tracking mouse positioning to affect coordinates
 const InteractionHandler: React.FC = () => {
-  const { mouse } = useThree();
+  const { pointer } = useThree();
   const groupRef = useRef<THREE.Group>(null);
 
   useFrame(() => {
     if (!groupRef.current) return;
-    // Smooth lerp to mouse position
-    const targetX = mouse.x * 1.2;
-    const targetY = mouse.y * 1.2;
+    // Smooth lerp to mouse/pointer position
+    const targetX = pointer.x * 1.2;
+    const targetY = pointer.y * 1.2;
     groupRef.current.position.x = THREE.MathUtils.lerp(groupRef.current.position.x, targetX, 0.05);
     groupRef.current.position.y = THREE.MathUtils.lerp(groupRef.current.position.y, targetY, 0.05);
   });
