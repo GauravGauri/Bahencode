@@ -121,7 +121,29 @@ export default function Header() {
       >
         <div className="max-w-7xl mx-auto px-4 md:px-8 flex items-center justify-between relative">
           
-          <nav className="hidden lg:flex items-center gap-6">
+          {/* MOBILE BURGER (Left) */}
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="lg:hidden text-foreground hover:text-rose transition-colors cursor-pointer"
+            aria-label="Toggle Menu"
+          >
+            {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+
+          {/* LOGO (Center on mobile, Left on desktop) */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 lg:static lg:translate-x-0 lg:translate-y-0 text-center lg:text-left select-none">
+            <Link href="/" className="group block">
+              <h1 className="font-playfair text-2xl md:text-3xl lg:text-2xl xl:text-3xl font-bold tracking-wide text-foreground leading-none">
+                behencode<span className="text-rose inline-block group-hover:scale-125 transition-transform duration-300 ml-0.5">♡</span>
+              </h1>
+              <p className="text-[8px] md:text-[9px] lg:text-[7px] xl:text-[8px] tracking-[0.2em] uppercase text-light-brown mt-1 lg:mt-0.5">
+                where she is free to be all of her
+              </p>
+            </Link>
+          </div>
+
+          {/* DESKTOP NAVIGATION */}
+          <nav className="hidden lg:flex items-center justify-center gap-4 xl:gap-6 flex-1 px-4 max-w-3xl mx-auto">
             <Link
               href="/shop"
               className={`text-xs tracking-widest font-semibold hover:text-rose transition-colors duration-200 ${
@@ -192,27 +214,6 @@ export default function Header() {
               ABOUT
             </Link>
           </nav>
-
-          {/* MOBILE BURGER (Left) */}
-          <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="lg:hidden text-foreground hover:text-rose transition-colors cursor-pointer"
-            aria-label="Toggle Menu"
-          >
-            {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
-
-          {/* LOGO (Center) */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center select-none">
-            <Link href="/" className="group block">
-              <h1 className="font-playfair text-2xl md:text-3xl font-bold tracking-wide text-foreground leading-none">
-                behencode<span className="text-rose inline-block group-hover:scale-125 transition-transform duration-300 ml-0.5">♡</span>
-              </h1>
-              <p className="text-[8px] md:text-[9px] tracking-[0.2em] uppercase text-light-brown mt-1">
-                where she is free to be all of her
-              </p>
-            </Link>
-          </div>
 
           {/* NAV RIGHT */}
           <div className="flex items-center gap-4 md:gap-5">
