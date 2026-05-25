@@ -25,50 +25,7 @@ import {
 import API from '@/lib/api';
 import { getImageUrl } from '@/lib/utils';
 
-// Mock DB seeds for offline preview
-const PREVIEW_PRODUCTS = [
-  {
-    _id: 'mock-1',
-    name: 'Lilac Breeze Peplum Top',
-    description: 'A charming floral peplum top crafted from breathable cotton.',
-    price: 1299,
-    discountPrice: 1099,
-    category: 'Tops',
-    images: ['https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=600&auto=format&fit=crop'],
-    isNewIn: true,
-    isBestseller: false,
-    inStock: true,
-    stockQuantity: 24,
-    sizes: ['XS', 'S', 'M', 'L'],
-  },
-  {
-    _id: 'mock-2',
-    name: 'Seventies Blush Bell Bottoms',
-    description: 'High-waisted retro flared denim bell bottoms in a gorgeous blush wash.',
-    price: 2199,
-    category: 'Bottoms',
-    images: ['https://images.unsplash.com/photo-1541099649105-f69ad21f3246?q=80&w=600&auto=format&fit=crop'],
-    isNewIn: true,
-    isBestseller: true,
-    inStock: true,
-    stockQuantity: 12,
-    sizes: ['S', 'M', 'L', 'XL'],
-  },
-  {
-    _id: 'mock-3',
-    name: 'Ethereal Dream Sage Maxi',
-    description: 'Flowy tired maxi dress in soft sage green.',
-    price: 3299,
-    discountPrice: 2899,
-    category: 'Dresses',
-    images: ['https://images.unsplash.com/photo-1595777457583-95e059d581b8?q=80&w=600&auto=format&fit=crop'],
-    isNewIn: false,
-    isBestseller: true,
-    inStock: true,
-    stockQuantity: 8,
-    sizes: ['XS', 'S', 'M', 'L', 'XL'],
-  },
-];
+// Preview products removed (fetching from DB instead)
 
 const PREVIEW_MESSAGES = [
   {
@@ -164,7 +121,7 @@ export default function AdminDashboard() {
   };
   
   // Data States
-  const [products, setProducts] = useState<any[]>(PREVIEW_PRODUCTS);
+  const [products, setProducts] = useState<any[]>([]);
   const [messages, setMessages] = useState<any[]>(PREVIEW_MESSAGES);
   const [users, setUsers] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -305,11 +262,11 @@ export default function AdminDashboard() {
       // Products fetch
       try {
         const prodRes = await API.get('/products');
-        if (prodRes.data && prodRes.data.products && prodRes.data.products.length > 0) {
+        if (prodRes.data && prodRes.data.products) {
           setProducts(prodRes.data.products);
         }
       } catch (err) {
-        console.warn('API connection issue loading products. Using mock fallback list.');
+        console.warn('API connection issue loading products.');
       }
 
       // Messages fetch

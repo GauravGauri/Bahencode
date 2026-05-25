@@ -20,78 +20,7 @@ import 'swiper/css/pagination';
 // Load Canvas3D dynamically to prevent SSR issues (WebGL relies on browser APIs)
 const Canvas3D = dynamic(() => import('@/components/Canvas3D'), { ssr: false });
 
-// Mock products fallback when API fails or DB is not connected
-const MOCK_PRODUCTS = [
-  {
-    _id: 'mock-1',
-    name: 'Lilac Breeze Peplum Top',
-    price: 1299,
-    discountPrice: 1099,
-    category: 'Tops',
-    images: ['https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=600&auto=format&fit=crop'],
-    isNewIn: true,
-    isBestseller: false,
-    inStock: true,
-    sizes: ['XS', 'S', 'M', 'L'],
-  },
-  {
-    _id: 'mock-2',
-    name: 'Seventies Blush Bell Bottoms',
-    price: 2199,
-    category: 'Bottoms',
-    images: ['https://images.unsplash.com/photo-1541099649105-f69ad21f3246?q=80&w=600&auto=format&fit=crop'],
-    isNewIn: true,
-    isBestseller: true,
-    inStock: true,
-    sizes: ['S', 'M', 'L', 'XL'],
-  },
-  {
-    _id: 'mock-3',
-    name: 'Ethereal Dream Sage Maxi',
-    price: 3299,
-    discountPrice: 2899,
-    category: 'Dresses',
-    images: ['https://images.unsplash.com/photo-1595777457583-95e059d581b8?q=80&w=600&auto=format&fit=crop'],
-    isNewIn: false,
-    isBestseller: true,
-    inStock: true,
-    sizes: ['XS', 'S', 'M', 'L', 'XL'],
-  },
-  {
-    _id: 'mock-4',
-    name: 'Sunset Boulevard Linen Coord',
-    price: 3899,
-    category: 'Coord Sets',
-    images: ['https://images.unsplash.com/photo-1585487000160-6ebcfceb0d03?q=80&w=600&auto=format&fit=crop'],
-    isNewIn: true,
-    isBestseller: false,
-    inStock: true,
-    sizes: ['S', 'M', 'L'],
-  },
-  {
-    _id: 'mock-5',
-    name: 'Cinnamon Cable Knit Sweater',
-    price: 2799,
-    category: 'Winter Collection',
-    images: ['https://images.unsplash.com/photo-1574164904299-3a102b110380?q=80&w=600&auto=format&fit=crop'],
-    isNewIn: true,
-    isBestseller: false,
-    inStock: true,
-    sizes: ['M', 'L', 'XL'],
-  },
-  {
-    _id: 'mock-6',
-    name: 'Rosewood Satin Cowl Midi',
-    price: 2899,
-    category: 'Dresses',
-    images: ['https://images.unsplash.com/photo-1496747611176-843222e1e57c?q=80&w=600&auto=format&fit=crop'],
-    isNewIn: false,
-    isBestseller: true,
-    inStock: true,
-    sizes: ['XS', 'S', 'M', 'L'],
-  },
-];
-
+// CATEGORIES
 const CATEGORIES = [
   { name: 'Tops', count: '12 Items', img: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=600&auto=format&fit=crop', link: '/shop?category=Tops' },
   { name: 'Bottoms', count: '8 Items', img: 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?q=80&w=600&auto=format&fit=crop', link: '/shop?category=Bottoms' },
@@ -101,7 +30,7 @@ const CATEGORIES = [
 ];
 
 export default function HomePage() {
-  const [products, setProducts] = useState<any[]>(MOCK_PRODUCTS);
+  const [products, setProducts] = useState<any[]>([]);
   const [wishlist, setWishlist] = useState<string[]>([]);
   const { addToCart } = useCart();
 
@@ -109,11 +38,11 @@ export default function HomePage() {
     const fetchProducts = async () => {
       try {
         const response = await API.get('/products');
-        if (response.data && response.data.products && response.data.products.length > 0) {
+        if (response.data && response.data.products) {
           setProducts(response.data.products);
         }
       } catch (err) {
-        console.warn('Backend server not responding. Falling back to high-fidelity mock data.');
+        console.warn('Backend server not responding.');
       }
     };
     fetchProducts();

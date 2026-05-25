@@ -15,84 +15,6 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 
-// Fallback product catalog
-const MOCK_CATALOG = [
-  {
-    _id: 'mock-1',
-    name: 'Lilac Breeze Peplum Top',
-    description: 'A charming floral peplum top crafted from breathable cotton, featuring adjustable tie straps and a sweet sweetheart neckline.',
-    price: 1299,
-    discountPrice: 1099,
-    category: 'Tops',
-    images: ['https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=600&auto=format&fit=crop'],
-    isNewIn: true,
-    isBestseller: false,
-    inStock: true,
-    sizes: ['XS', 'S', 'M', 'L'],
-  },
-  {
-    _id: 'mock-2',
-    name: 'Seventies Blush Bell Bottoms',
-    description: 'High-waisted retro flared denim bell bottoms in a gorgeous blush wash. Extremely soft and stretchy for all-day comfort.',
-    price: 2199,
-    category: 'Bottoms',
-    images: ['https://images.unsplash.com/photo-1541099649105-f69ad21f3246?q=80&w=600&auto=format&fit=crop'],
-    isNewIn: true,
-    isBestseller: true,
-    inStock: true,
-    sizes: ['S', 'M', 'L', 'XL'],
-  },
-  {
-    _id: 'mock-3',
-    name: 'Ethereal Dream Sage Maxi',
-    description: 'Flowy tired maxi dress in soft sage green. Perfect for beach strolls or casual brunch dates with your girls.',
-    price: 3299,
-    discountPrice: 2899,
-    category: 'Dresses',
-    images: ['https://images.unsplash.com/photo-1595777457583-95e059d581b8?q=80&w=600&auto=format&fit=crop'],
-    isNewIn: false,
-    isBestseller: true,
-    inStock: true,
-    sizes: ['XS', 'S', 'M', 'L', 'XL'],
-  },
-  {
-    _id: 'mock-4',
-    name: 'Sunset Boulevard Linen Coord',
-    description: 'Matching lightweight printed linen set consisting of a relaxed-fit blazer and structured high-waist shorts.',
-    price: 3899,
-    category: 'Coord Sets',
-    images: ['https://images.unsplash.com/photo-1585487000160-6ebcfceb0d03?q=80&w=600&auto=format&fit=crop'],
-    isNewIn: true,
-    isBestseller: false,
-    inStock: true,
-    sizes: ['S', 'M', 'L'],
-  },
-  {
-    _id: 'mock-5',
-    name: 'Cinnamon Cable Knit Sweater',
-    description: 'Cozy and warm cable knit sweater in cinnamon brown. Features a slightly oversized fit and ribbed cuffs.',
-    price: 2799,
-    category: 'Winter Collection',
-    images: ['https://images.unsplash.com/photo-1574164904299-3a102b110380?q=80&w=600&auto=format&fit=crop'],
-    isNewIn: true,
-    isBestseller: false,
-    inStock: true,
-    sizes: ['M', 'L', 'XL'],
-  },
-  {
-    _id: 'mock-6',
-    name: 'Rosewood Satin Cowl Midi',
-    description: 'Elegant midi dress cut from premium rosewood satin. Has a flattering cowl neck and subtle thigh-high side slit.',
-    price: 2899,
-    category: 'Dresses',
-    images: ['https://images.unsplash.com/photo-1496747611176-843222e1e57c?q=80&w=600&auto=format&fit=crop'],
-    isNewIn: false,
-    isBestseller: true,
-    inStock: true,
-    sizes: ['XS', 'S', 'M', 'L'],
-  },
-];
-
 interface PageProps {
   params: Promise<{ id: string }>;
 }
@@ -129,7 +51,6 @@ export default function ProductDetailsPage({ params }: PageProps) {
     const fetchProductData = async () => {
       try {
         setLoading(true);
-        // Try getting target product
         let targetProduct = null;
         try {
           const res = await API.get(`/products/${productId}`);
@@ -137,12 +58,7 @@ export default function ProductDetailsPage({ params }: PageProps) {
             targetProduct = res.data.product;
           }
         } catch (err) {
-          console.warn('API error fetching product. Using mock catalog fallback.');
-        }
-
-        // Fallback to mock product
-        if (!targetProduct) {
-          targetProduct = MOCK_CATALOG.find((p) => p._id === productId);
+          console.warn('API error fetching product.');
         }
 
         if (targetProduct) {
@@ -150,10 +66,10 @@ export default function ProductDetailsPage({ params }: PageProps) {
           setSelectedSize(targetProduct.sizes?.[0] || 'S');
 
           // Fetch recommended catalog
-          let catalog = [...MOCK_CATALOG];
+          let catalog: any[] = [];
           try {
             const resAll = await API.get('/products');
-            if (resAll.data && resAll.data.products && resAll.data.products.length > 0) {
+            if (resAll.data && resAll.data.products) {
               catalog = resAll.data.products;
             }
           } catch (e) {}
@@ -162,8 +78,8 @@ export default function ProductDetailsPage({ params }: PageProps) {
             if (!cat) return '';
             return typeof cat === 'object' ? (cat._id || cat) : cat;
           };
-          const recs = catalog.filter((p) => p._id !== productId && getCategoryId(p.category) === getCategoryId(targetProduct.category));
-          setRecommended(recs.length > 0 ? recs : catalog.filter((p) => p._id !== productId).slice(0, 4));
+          const recs = catalog.filter((p: any) => p._id !== productId && getCategoryId(p.category) === getCategoryId(targetProduct.category));
+          setRecommended(recs.length > 0 ? recs : catalog.filter((p: any) => p._id !== productId).slice(0, 4));
         }
       } catch (err) {
         console.error('Fatal details loader error:', err);
@@ -183,29 +99,12 @@ export default function ProductDetailsPage({ params }: PageProps) {
           setReviews(res.data.reviews);
         }
       } catch (err) {
-        console.warn('Could not load reviews from API. Falling back to mock localStorage reviews.');
+        console.warn('Could not load reviews from API.');
         const saved = localStorage.getItem(`reviews-${productId}`);
         if (saved) {
           setReviews(JSON.parse(saved));
         } else {
-          const mockReviews = [
-            {
-              _id: 'mock-rev-1',
-              name: 'Aanya Sharma',
-              rating: 5,
-              comment: 'Absolutely love the fabric quality and fits like a dream! Highly recommended.',
-              createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-            },
-            {
-              _id: 'mock-rev-2',
-              name: 'Pooja Patel',
-              rating: 4,
-              comment: 'Super soft material and gorgeous color. Took 4 days to deliver, otherwise 5 stars.',
-              createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-            }
-          ];
-          localStorage.setItem(`reviews-${productId}`, JSON.stringify(mockReviews));
-          setReviews(mockReviews);
+          setReviews([]);
         }
       }
     };

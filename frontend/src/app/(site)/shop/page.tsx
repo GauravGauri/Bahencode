@@ -9,108 +9,6 @@ import API from '@/lib/api';
 import { useCart } from '@/context/CartContext';
 import { getImageUrl } from '@/lib/utils';
 
-// Mock catalog fallback
-const MOCK_CATALOG = [
-  {
-    _id: 'mock-1',
-    name: 'Lilac Breeze Peplum Top',
-    description: 'A charming floral peplum top crafted from breathable cotton, featuring adjustable tie straps and a sweet sweetheart neckline.',
-    price: 1299,
-    discountPrice: 1099,
-    category: 'Tops',
-    images: ['https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=600&auto=format&fit=crop'],
-    isNewIn: true,
-    isBestseller: false,
-    inStock: true,
-    sizes: ['XS', 'S', 'M', 'L'],
-  },
-  {
-    _id: 'mock-2',
-    name: 'Seventies Blush Bell Bottoms',
-    description: 'High-waisted retro flared denim bell bottoms in a gorgeous blush wash. Extremely soft and stretchy for all-day comfort.',
-    price: 2199,
-    category: 'Bottoms',
-    images: ['https://images.unsplash.com/photo-1541099649105-f69ad21f3246?q=80&w=600&auto=format&fit=crop'],
-    isNewIn: true,
-    isBestseller: true,
-    inStock: true,
-    sizes: ['S', 'M', 'L', 'XL'],
-  },
-  {
-    _id: 'mock-3',
-    name: 'Ethereal Dream Sage Maxi',
-    description: 'Flowy tired maxi dress in soft sage green. Perfect for beach strolls or casual brunch dates with your girls.',
-    price: 3299,
-    discountPrice: 2899,
-    category: 'Dresses',
-    images: ['https://images.unsplash.com/photo-1595777457583-95e059d581b8?q=80&w=600&auto=format&fit=crop'],
-    isNewIn: false,
-    isBestseller: true,
-    inStock: true,
-    sizes: ['XS', 'S', 'M', 'L', 'XL'],
-  },
-  {
-    _id: 'mock-4',
-    name: 'Sunset Boulevard Linen Coord',
-    description: 'Matching lightweight printed linen set consisting of a relaxed-fit blazer and structured high-waist shorts.',
-    price: 3899,
-    category: 'Coord Sets',
-    images: ['https://images.unsplash.com/photo-1585487000160-6ebcfceb0d03?q=80&w=600&auto=format&fit=crop'],
-    isNewIn: true,
-    isBestseller: false,
-    inStock: true,
-    sizes: ['S', 'M', 'L'],
-  },
-  {
-    _id: 'mock-5',
-    name: 'Cinnamon Cable Knit Sweater',
-    description: 'Cozy and warm cable knit sweater in cinnamon brown. Features a slightly oversized fit and ribbed cuffs.',
-    price: 2799,
-    category: 'Winter Collection',
-    images: ['https://images.unsplash.com/photo-1574164904299-3a102b110380?q=80&w=600&auto=format&fit=crop'],
-    isNewIn: true,
-    isBestseller: false,
-    inStock: true,
-    sizes: ['M', 'L', 'XL'],
-  },
-  {
-    _id: 'mock-6',
-    name: 'Rosewood Satin Cowl Midi',
-    description: 'Elegant midi dress cut from premium rosewood satin. Has a flattering cowl neck and subtle thigh-high side slit.',
-    price: 2899,
-    category: 'Dresses',
-    images: ['https://images.unsplash.com/photo-1496747611176-843222e1e57c?q=80&w=600&auto=format&fit=crop'],
-    isNewIn: false,
-    isBestseller: true,
-    inStock: true,
-    sizes: ['XS', 'S', 'M', 'L'],
-  },
-  {
-    _id: 'mock-7',
-    name: 'Peachy Keen Cropped Shirt',
-    description: 'Button-down short-sleeve crop shirt in soft pastel peach. Looks adorable paired with high-waist denim.',
-    price: 1199,
-    category: 'Tops',
-    images: ['https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=600&auto=format&fit=crop'],
-    isNewIn: false,
-    isBestseller: false,
-    inStock: true,
-    sizes: ['XS', 'S', 'M', 'L'],
-  },
-  {
-    _id: 'mock-8',
-    name: 'Ice Blue Bell Crop Shirt',
-    description: 'A structural cropped shirt in an icy blue cotton blend, featuring bell sleeves for added flair.',
-    price: 1499,
-    category: 'Tops',
-    images: ['https://images.unsplash.com/photo-1539109136881-3be0616acf4b?q=80&w=600&auto=format&fit=crop'],
-    isNewIn: false,
-    isBestseller: false,
-    inStock: false,
-    sizes: ['S', 'M', 'L'],
-  },
-];
-
 const SIZES = ['XS', 'S', 'M', 'L', 'XL'];
 
 function ShopContent() {
@@ -118,9 +16,9 @@ function ShopContent() {
   const { addToCart } = useCart();
 
   // State Management
-  const [products, setProducts] = useState<any[]>(MOCK_CATALOG);
+  const [products, setProducts] = useState<any[]>([]);
   const [dbCategories, setDbCategories] = useState<any[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<any[]>(MOCK_CATALOG);
+  const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Filters State
@@ -134,17 +32,17 @@ function ShopContent() {
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
 
-  // Load products from API or fallback
+  // Load products from API
   useEffect(() => {
     const getProducts = async () => {
       try {
         setLoading(true);
         const res = await API.get('/products');
-        if (res.data && res.data.products && res.data.products.length > 0) {
+        if (res.data && res.data.products) {
           setProducts(res.data.products);
         }
       } catch (err) {
-        console.warn('API error fetching products. Using fallback mock catalog.');
+        console.warn('API error fetching products.');
       } finally {
         setLoading(false);
       }
@@ -152,7 +50,7 @@ function ShopContent() {
     getProducts();
   }, []);
 
-  // Load categories from API or fallback
+  // Load categories from API
   useEffect(() => {
     const getCategories = async () => {
       try {
