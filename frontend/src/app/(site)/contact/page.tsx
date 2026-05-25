@@ -39,12 +39,17 @@ export default function ContactPage() {
         throw new Error(response.data?.message || 'Failed to send inquiry.');
       }
     } catch (err: any) {
-      console.warn('Backend contact API unavailable. Simulating success for preview.');
-      // Simulate success for frontend preview (so user doesn't get blocked)
-      setTimeout(() => {
-        setSubmitStatus('success');
-        reset();
-      }, 1000);
+      if (err.response) {
+        setSubmitStatus('error');
+        setErrorMessage(err.response.data?.message || err.message || 'Failed to send message.');
+      } else {
+        console.warn('Backend contact API unavailable. Simulating success for preview.');
+        // Simulate success for frontend preview (so user doesn't get blocked)
+        setTimeout(() => {
+          setSubmitStatus('success');
+          reset();
+        }, 1000);
+      }
     } finally {
       setIsSubmitting(false);
     }

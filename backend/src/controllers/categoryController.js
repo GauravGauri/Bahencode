@@ -34,10 +34,10 @@ exports.createCategory = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Category name is required' });
     }
 
-    // Check if category name already exists
-    const categoryExists = await Category.findOne({ name: name.trim() });
+    // Check if category name already exists under this parent
+    const categoryExists = await Category.findOne({ name: name.trim(), parent: parentId });
     if (categoryExists) {
-      return res.status(400).json({ success: false, message: 'Category name already exists' });
+      return res.status(400).json({ success: false, message: 'Category name already exists under this parent' });
     }
 
     // Validate parent if provided

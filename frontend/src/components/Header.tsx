@@ -203,7 +203,7 @@ export default function Header() {
           </button>
 
           {/* LOGO (Center) */}
-          <div className="absolute left-1/2 -translate-x-1/2 text-center select-none">
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center select-none">
             <Link href="/" className="group block">
               <h1 className="font-playfair text-2xl md:text-3xl font-bold tracking-wide text-foreground leading-none">
                 behencode<span className="text-rose inline-block group-hover:scale-125 transition-transform duration-300 ml-0.5">♡</span>
@@ -333,7 +333,7 @@ export default function Header() {
 
       {/* MOBILE NAV OVERLAY */}
       {isMobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 top-[112px] bg-background/95 z-40 backdrop-blur-sm animate-fadeIn">
+        <div className={`lg:hidden fixed inset-0 bg-background/95 z-40 backdrop-blur-sm animate-fadeIn ${isScrolled ? 'top-[96px]' : 'top-[112px]'}`}>
           <nav className="flex flex-col items-center gap-6 py-12 px-6">
             <Link
               href="/shop"

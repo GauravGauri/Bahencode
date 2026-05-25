@@ -334,10 +334,16 @@ export default function AdminDashboard() {
         const catRes = await API.get('/categories');
         if (catRes.data && catRes.data.categories) {
           setCategories(catRes.data.categories);
+          if (catRes.data.categories.length > 0) {
+            setFormCategory(catRes.data.categories[0]._id);
+          }
         }
       } catch (err) {
         console.warn('API connection issue loading categories. Using mock categories.');
         setCategories(PREVIEW_CATEGORIES);
+        if (PREVIEW_CATEGORIES.length > 0) {
+          setFormCategory(PREVIEW_CATEGORIES[0]._id);
+        }
       }
 
       // Orders fetch
@@ -457,28 +463,33 @@ export default function AdminDashboard() {
       }
     } catch (err: any) {
       const errorMsg = err.response?.data?.message || err.message;
-      console.warn('API error saving product. Simulating local addition.');
-      
-      // Simulating addition for preview
-      const newMockItem = {
-        _id: 'mock-' + Math.floor(Math.random() * 1000),
-        name: formName,
-        description: formDescription,
-        price: Number(formPrice),
-        discountPrice: formDiscountPrice ? Number(formDiscountPrice) : undefined,
-        category: formCategory,
-        sizes: formSizes,
-        stockQuantity: Number(formStock),
-        inStock: Number(formStock) > 0,
-        isNewIn: formIsNewIn,
-        isBestseller: formIsBestseller,
-        images: imageUrlString ? imageUrlString.split(',').map(url => url.trim()).filter(Boolean) : ['https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=600&auto=format&fit=crop'],
-      };
+      if (err.response) {
+        triggerAlert('error', `API Error: ${errorMsg}`);
+        console.error('API product creation failed:', errorMsg, err.response.data);
+      } else {
+        console.warn('API error saving product. Simulating local addition.');
+        
+        // Simulating addition for preview
+        const newMockItem = {
+          _id: 'mock-' + Math.floor(Math.random() * 1000),
+          name: formName,
+          description: formDescription,
+          price: Number(formPrice),
+          discountPrice: formDiscountPrice ? Number(formDiscountPrice) : undefined,
+          category: formCategory,
+          sizes: formSizes,
+          stockQuantity: Number(formStock),
+          inStock: Number(formStock) > 0,
+          isNewIn: formIsNewIn,
+          isBestseller: formIsBestseller,
+          images: imageUrlString ? imageUrlString.split(',').map(url => url.trim()).filter(Boolean) : ['https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=600&auto=format&fit=crop'],
+        };
 
-      setProducts((prev) => [newMockItem, ...prev]);
-      triggerAlert('success', 'Product simulated successfully (offline mode).');
-      setIsAddModalOpen(false);
-      resetForm();
+        setProducts((prev) => [newMockItem, ...prev]);
+        triggerAlert('success', 'Product simulated successfully (offline mode).');
+        setIsAddModalOpen(false);
+        resetForm();
+      }
     }
   };
 
@@ -536,31 +547,37 @@ export default function AdminDashboard() {
         loadDashboardData();
       }
     } catch (err: any) {
-      console.warn('API error updating product. Simulating local edit.');
-      
-      setProducts((prev) =>
-        prev.map((p) =>
-          p._id === selectedProduct._id
-            ? {
-                ...p,
-                name: formName,
-                description: formDescription,
-                price: Number(formPrice),
-                discountPrice: formDiscountPrice ? Number(formDiscountPrice) : undefined,
-                category: formCategory,
-                stockQuantity: Number(formStock),
-                inStock: Number(formStock) > 0,
-                isNewIn: formIsNewIn,
-                isBestseller: formIsBestseller,
-                sizes: formSizes,
-                images: imageUrlString ? imageUrlString.split(',').map(url => url.trim()).filter(Boolean) : p.images,
-              }
-            : p
-        )
-      );
-      triggerAlert('success', 'Product edits simulated (offline mode).');
-      setIsEditModalOpen(false);
-      resetForm();
+      const errorMsg = err.response?.data?.message || err.message;
+      if (err.response) {
+        triggerAlert('error', `API Error: ${errorMsg}`);
+        console.error('API product update failed:', errorMsg, err.response.data);
+      } else {
+        console.warn('API error updating product. Simulating local edit.');
+        
+        setProducts((prev) =>
+          prev.map((p) =>
+            p._id === selectedProduct._id
+              ? {
+                  ...p,
+                  name: formName,
+                  description: formDescription,
+                  price: Number(formPrice),
+                  discountPrice: formDiscountPrice ? Number(formDiscountPrice) : undefined,
+                  category: formCategory,
+                  stockQuantity: Number(formStock),
+                  inStock: Number(formStock) > 0,
+                  isNewIn: formIsNewIn,
+                  isBestseller: formIsBestseller,
+                  sizes: formSizes,
+                  images: imageUrlString ? imageUrlString.split(',').map(url => url.trim()).filter(Boolean) : p.images,
+                }
+              : p
+          )
+        );
+        triggerAlert('success', 'Product edits simulated (offline mode).');
+        setIsEditModalOpen(false);
+        resetForm();
+      }
     }
   };
 
@@ -905,7 +922,11 @@ export default function AdminDashboard() {
                         <img src={getImageUrl(p.images?.[0])} alt={p.name} className="w-10 h-12 object-cover rounded-md bg-cream" />
                         <div>
                           <p className="text-xs font-bold text-foreground truncate max-w-[150px]">{p.name}</p>
-                          <p className="text-[9px] uppercase tracking-wider text-light-brown mt-0.5">{p.category}</p>
+                          <p className="text-[9px] uppercase tracking-wider text-light-brown mt-0.5">
+                            {typeof p.category === 'object' && p.category
+                              ? p.category.name
+                              : p.category}
+                          </p>
                         </div>
                       </div>
                       <div className="text-right">
