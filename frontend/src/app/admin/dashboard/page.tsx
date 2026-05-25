@@ -283,12 +283,16 @@ export default function AdminDashboard() {
     const token = localStorage.getItem('behencode_admin_token');
     const userStr = localStorage.getItem('behencode_admin_user');
     
-    if (!token || !userStr) {
+    if (!token || !userStr || token === 'undefined' || userStr === 'undefined') {
+      localStorage.removeItem('behencode_admin_token');
+      localStorage.removeItem('behencode_admin_user');
       router.push('/admin/login');
     } else {
       try {
         setAdminUser(JSON.parse(userStr));
       } catch (e) {
+        localStorage.removeItem('behencode_admin_token');
+        localStorage.removeItem('behencode_admin_user');
         router.push('/admin/login');
       }
     }

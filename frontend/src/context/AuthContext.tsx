@@ -31,7 +31,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const savedToken = localStorage.getItem('behencode_token') || localStorage.getItem('behencode_admin_token');
     const savedUser = localStorage.getItem('behencode_user') || localStorage.getItem('behencode_admin_user');
 
-    if (savedToken && savedUser) {
+    if (savedToken && savedUser && savedToken !== 'undefined' && savedUser !== 'undefined') {
       try {
         setToken(savedToken);
         setUser(JSON.parse(savedUser));
@@ -40,7 +40,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Clear corrupt state
         localStorage.removeItem('behencode_token');
         localStorage.removeItem('behencode_user');
+        localStorage.removeItem('behencode_admin_token');
+        localStorage.removeItem('behencode_admin_user');
       }
+    } else if (savedToken === 'undefined' || savedUser === 'undefined') {
+      // Clear corrupt undefined state strings
+      localStorage.removeItem('behencode_token');
+      localStorage.removeItem('behencode_user');
+      localStorage.removeItem('behencode_admin_token');
+      localStorage.removeItem('behencode_admin_user');
     }
     setIsLoading(false);
   }, []);
