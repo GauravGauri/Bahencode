@@ -33,9 +33,16 @@ export default function AdminLoginPage() {
       const response = await API.post('/auth/login', data);
       
       if (response.data?.success && response.data?.token) {
+        const userObj = {
+          _id: response.data._id || response.data.user?._id,
+          username: response.data.username || response.data.user?.username,
+          email: response.data.email || response.data.user?.email,
+          role: response.data.role || response.data.user?.role || 'admin',
+        };
+
         // Save to localStorage for API headers
         localStorage.setItem('behencode_admin_token', response.data.token);
-        localStorage.setItem('behencode_admin_user', JSON.stringify(response.data.user));
+        localStorage.setItem('behencode_admin_user', JSON.stringify(userObj));
         
         // Redirect to admin dashboard
         router.push('/admin/dashboard');
@@ -49,7 +56,7 @@ export default function AdminLoginPage() {
       // Fallback developer bypass if DB is offline
       if (data.email === 'admin@behencode.co' && data.password === 'BehencodeAdmin123!') {
         localStorage.setItem('behencode_admin_token', 'mock_preview_jwt_token_key');
-        localStorage.setItem('behencode_admin_user', JSON.stringify({ email: data.email, username: 'Admin' }));
+        localStorage.setItem('behencode_admin_user', JSON.stringify({ email: data.email, username: 'Admin', role: 'admin' }));
         router.push('/admin/dashboard');
       } else {
         setLoginError(errMsg + ' (Note: Use admin@behencode.co / BehencodeAdmin123!)');

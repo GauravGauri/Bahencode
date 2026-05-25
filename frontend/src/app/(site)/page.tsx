@@ -307,7 +307,9 @@ export default function HomePage() {
                   {/* Info */}
                   <div className="px-1 text-center">
                     <p className="text-[10px] tracking-widest text-light-brown uppercase mb-1">
-                      {product.category}
+                      {typeof product.category === 'object' && product.category
+                        ? product.category.name
+                        : product.category}
                     </p>
                     <Link href={`/products/${product._id}`}>
                       <h3 className="font-playfair text-sm font-bold text-foreground hover:text-rose transition-colors truncate">
@@ -385,7 +387,9 @@ export default function HomePage() {
               {/* Info */}
               <div className="px-1 text-center">
                 <p className="text-[10px] tracking-widest text-light-brown uppercase mb-1">
-                  {product.category}
+                  {typeof product.category === 'object' && product.category
+                    ? product.category.name
+                    : product.category}
                 </p>
                 <Link href={`/products/${product._id}`}>
                   <h3 className="font-playfair text-sm font-bold text-foreground hover:text-rose transition-colors truncate">
