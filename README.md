@@ -152,19 +152,6 @@ Full Stack Developer • UI Enthusiast • Problem Solver
 
 ---
 
-<p align="center">
-  Made with 🤍 for premium web experiences
-</p>
-
-📊 GitHub Stats
-<p align="left">
-<img src="https://github-readme-stats.shion.dev/api?username=GauravGauri&theme=dark&hide_border=false&include_all_commits=false&count_private=false" height="150" />
-<img src="https://streak-stats.demolab.com/?user=GauravGauri&theme=dark&hide_border=false" height="150" />
-</p>
-
-<p align="left">
-<img src="https://github-readme-stats.shion.dev/api/top-langs/?username=GauravGauri&theme=dark&hide_border=false&include_all_commits=false&count_private=false&layout=compact" height="150" />
-</p>
 
 <p align="center">
 <a href="https://visitcount.itsvg.in">
